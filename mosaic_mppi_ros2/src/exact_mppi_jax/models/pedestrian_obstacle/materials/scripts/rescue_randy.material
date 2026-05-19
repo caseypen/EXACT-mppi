@@ -1,0 +1,25 @@
+// OGRE1 material wrapping the rescue_randy albedo PNG so Gazebo Classic's
+// default renderer can show texture color (the SDF <pbr> block is ignored
+// in OGRE1). The mesh is UV-unwrapped onto a single albedo atlas, so one
+// texture_unit covers the whole body.
+
+material RescueRandy/Diffuse
+{
+  receive_shadows on
+  technique
+  {
+    pass
+    {
+      ambient  0.85 0.85 0.85 1.0
+      diffuse  1.0  1.0  1.0  1.0
+      specular 0.15 0.15 0.15 1.0 12
+
+      texture_unit
+      {
+        texture rescue_randy_albedo.png
+        tex_address_mode wrap
+        filtering trilinear
+      }
+    }
+  }
+}

@@ -1,0 +1,142 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="mosaic_dynamic_pedestrians">
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <plugin name="gazebo_ros_init" filename="libgazebo_ros_init.so">
+      <publish_rate>100</publish_rate>
+    </plugin>
+    <plugin name="gazebo_ros_factory" filename="libgazebo_ros_factory.so"/>
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so"/>
+
+    <scene>
+      <ambient>0.45 0.45 0.45 1</ambient>
+      <background>0.78 0.82 0.86 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.2 -1</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="left_boundary">
+      <static>true</static>
+      <pose>0 2.65 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>7.0 0.12 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>7.0 0.12 0.5</size></box></geometry>
+          <material><ambient>0.35 0.37 0.38 1</ambient><diffuse>0.35 0.37 0.38 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="right_boundary">
+      <static>true</static>
+      <pose>0 -2.65 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>7.0 0.12 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>7.0 0.12 0.5</size></box></geometry>
+          <material><ambient>0.35 0.37 0.38 1</ambient><diffuse>0.35 0.37 0.38 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="start_marker">
+      <static>true</static>
+      <pose>-2.0 -0.5 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.45 0.03 0.02</size></box></geometry>
+          <material><ambient>0.1 0.45 0.9 1</ambient><diffuse>0.1 0.45 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_10</name>
+      <pose>-0.7 -2.1 0 0 0 1.5708</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_11</name>
+      <pose>0.35 2.1 0 0 0 -1.5708</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_12</name>
+      <pose>1.35 -2.0 0 0 0 1.5708</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_13</name>
+      <pose>2.2 -1.4 0 0 0 1.176</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_14</name>
+      <pose>-1.6 1.6 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_15</name>
+      <pose>2.7 -1.65 0 0 0 3.1416</pose>
+    </include>
+  </world>
+</sdf>

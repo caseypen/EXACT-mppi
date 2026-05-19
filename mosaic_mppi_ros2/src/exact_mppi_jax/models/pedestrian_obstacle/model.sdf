@@ -1,0 +1,88 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="pedestrian_obstacle">
+    <static>false</static>
+    <allow_auto_disable>false</allow_auto_disable>
+    <link name="body">
+      <kinematic>true</kinematic>
+      <gravity>false</gravity>
+      <inertial>
+        <mass>35.0</mass>
+        <inertia>
+          <ixx>1.0</ixx>
+          <iyy>1.0</iyy>
+          <izz>1.0</izz>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyz>0.0</iyz>
+        </inertia>
+      </inertial>
+
+      <!-- Realistic collision: a 10 cm radius cylinder (roughly torso-thick)
+           spanning the full 1.6 m height of the rescue_randy visual, so the
+           collision shape matches what you see and the LIMO lidar gets clean
+           hits at its mounting height. neupan_ros1 used a 5 cm sliver and
+           relied on RVO pedestrians to steer around the robot; we have no
+           RVO, so a wider cylinder is the right "real" approximation -- but
+           20 cm was too aggressive (LIMO + 20 cm needs > 31 cm clearance,
+           pedestrians constantly bumped LIMO when their fixed waypoints
+           crossed its path). -->
+      <collision name="collision">
+        <pose>0 0 0.8 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.10</radius>
+            <length>1.6</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.0</mu>
+              <mu2>0.0</mu2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <kp>1000000.0</kp>
+              <kd>1.0</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <!-- Visual: rescue_randy mesh + textures shipped locally with this package.
+           Gazebo resolves model:// against GAZEBO_MODEL_PATH (set by the launch file).
+           Relative texture refs inside the dae now find the bundled PNGs. -->
+      <visual name="randy">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://pedestrian_obstacle/meshes/rescue_randy.dae</uri>
+            <scale>0.3 0.3 0.3</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <!-- OGRE1 (Gazebo Classic default) ignores <pbr>; use a script wrapping
+               the albedo PNG as a diffuse texture. PBR maps still listed so
+               Ignition / OGRE2 renderers pick them up if available. -->
+          <script>
+            <uri>model://pedestrian_obstacle/materials/scripts</uri>
+            <uri>model://pedestrian_obstacle/materials/textures</uri>
+            <name>RescueRandy/Diffuse</name>
+          </script>
+          <pbr>
+            <metal>
+              <albedo_map>model://pedestrian_obstacle/materials/textures/rescue_randy_albedo.png</albedo_map>
+              <normal_map>model://pedestrian_obstacle/materials/textures/rescue_randy_normal.png</normal_map>
+              <metalness_map>model://pedestrian_obstacle/materials/textures/rescue_randy_metalness.png</metalness_map>
+              <roughness_map>model://pedestrian_obstacle/materials/textures/rescue_randy_roughness.png</roughness_map>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

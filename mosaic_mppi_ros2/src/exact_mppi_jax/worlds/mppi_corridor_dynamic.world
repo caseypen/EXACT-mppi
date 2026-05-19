@@ -1,0 +1,161 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="mppi_corridor_dynamic">
+    <physics name="default_physics" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <plugin name="gazebo_ros_init" filename="libgazebo_ros_init.so">
+      <publish_rate>100</publish_rate>
+    </plugin>
+    <plugin name="gazebo_ros_factory" filename="libgazebo_ros_factory.so"/>
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so"/>
+
+    <scene>
+      <ambient>0.45 0.45 0.45 1</ambient>
+      <background>0.78 0.82 0.86 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>12.5 9.5 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.2 -1</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <pose>13 9 0 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>30 8</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>30 8</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="lower_boundary">
+      <static>true</static>
+      <pose>12.5 7.0 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>30.0 1.0 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>30.0 1.0 0.5</size></box></geometry>
+          <material><ambient>0.35 0.37 0.38 1</ambient><diffuse>0.35 0.37 0.38 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="upper_boundary">
+      <static>true</static>
+      <pose>12.5 12.0 0.25 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>30.0 1.0 0.5</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>30.0 1.0 0.5</size></box></geometry>
+          <material><ambient>0.35 0.37 0.38 1</ambient><diffuse>0.35 0.37 0.38 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="start_marker">
+      <static>true</static>
+      <pose>0.0 9.5 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry><box><size>0.45 0.03 0.02</size></box></geometry>
+          <material><ambient>0.1 0.45 0.9 1</ambient><diffuse>0.1 0.45 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_10</name>
+      <pose>15.2838 8.8094 0 0 0 -2.8841</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_11</name>
+      <pose>16.9957 9.6309 0 0 0 2.7336</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_12</name>
+      <pose>13.5170 8.8991 0 0 0 -0.4858</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_13</name>
+      <pose>21.6455 10.0566 0 0 0 0.9454</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_14</name>
+      <pose>19.9555 10.8021 0 0 0 -0.8935</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_15</name>
+      <pose>10.7450 10.6708 0 0 0 -1.7143</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_16</name>
+      <pose>7.9283 10.6295 0 0 0 -2.7736</pose>
+    </include>
+    <include>
+      <uri>model://pedestrian_obstacle</uri>
+      <name>cross_clone_17</name>
+      <pose>7.7669 8.1561 0 0 0 -0.5997</pose>
+    </include>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>-2.0 9.5 6.0 0 1.05 0</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+  </world>
+</sdf>

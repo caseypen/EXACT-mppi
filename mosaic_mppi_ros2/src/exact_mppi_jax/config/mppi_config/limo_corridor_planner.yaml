@@ -1,0 +1,139 @@
+# LIMO (four-diff) MPPI planner config for the Gazebo corridor scene.
+# MPPI/Critics block ported verbatim from the mosaic_mppi_jax workspace
+# (limo_mppi_corridor_dynamic_planner.yaml); the global_ref_path / ros2
+# sections are adapted to the EXACT exact_mppi_jax bridge schema.
+MPPI:
+  motion_model_name: 'diff'
+  model_dt: 0.1
+  time_steps: 50
+  batch_size: 1000
+  iteration_count: 1
+  temperature: 0.3
+  gamma: 0.015
+  # Match neupan_ros1 LIMO limits: max_speed=[1.0, 3.14], max_acce=[1.0, 3.14].
+  vx_max: 0.5
+  vx_min: -0.5
+  wz_max: 1.5
+  wz_min: -1.5
+  ax_max: 1.0
+  ax_min: -1.0
+  az_max: 1.0
+  az_min: -1.0
+  vx_std: 0.5
+  wz_std: 0.5
+  retry_attempt_limit: 1
+  open_loop: False
+  seed: 0
+  debug: False
+
+  max_obs_num: 100
+
+  TrajectoryValidator:
+    collision_lookahead_time: 1.5
+    collision_margin_distance: 0.0
+
+  Critics:
+    ConstraintCritic:
+      enabled: True
+      cost_power: 1
+      cost_weight: 5.0
+    GoalCritic:
+      enabled: True
+      cost_power: 1
+      cost_weight: 5.0
+      threshold_to_consider: 1.4
+    GoalAngleCritic:
+      enabled: True
+      cost_power: 1
+      cost_weight: 3.0
+      threshold_to_consider: 0.5
+    ObstaclesCritic:
+      enabled: True
+      cost_power: 1
+      repulsion_weight: 5.0
+      critical_weight: 30.0
+      collision_cost: 100000.0
+      collision_margin_distance: 0.2
+      near_goal_distance: 0.5
+      repulsion_distance: 1.5
+    PathAlignCritic:
+      enabled: True
+      cost_power: 1
+      cost_weight: 5.0
+      max_path_occupancy_ratio: 0.07
+      trajectory_point_step: 4
+      threshold_to_consider: 0.5
+      offset_from_furthest: 20
+      use_path_orientation: False
+    PathFollowCritic:
+      enabled: True
+      cost_power: 1
+      cost_weight: 7.0
+      offset_from_furthest: 5
+      threshold_to_consider: 2.0
+    PathAngleCritic:
+      enabled: False
+      cost_power: 1
+      cost_weight: 2.2
+      offset_from_furthest: 4
+      threshold_to_consider: 0.5
+      max_angle_to_furthest: 0.785398
+      mode: 1
+    PreferForwardCritic:
+      enabled: False
+      cost_power: 1
+      cost_weight: 4.0
+      threshold_to_consider: 0.5
+    VelocityDeadbandCritic:
+      enabled: False
+      cost_power: 1
+      cost_weight: 35.0
+      deadband_velocities: [0.0, 0.0, 0.0]
+    TwirlingCritic:
+      enabled: True
+      cost_power: 1
+      cost_weight: 5.0
+      pose_tolerance: 0.1
+
+    # LIMO footprint 0.322 x 0.22 m with a rear cylindrical bar approximated
+    # by a 0.054 x 0.704 m rectangle in the MPPI footprint.
+  vertices: [
+      [[0.161, 0.11], [-0.161, 0.11], [-0.161, -0.11], [0.161, -0.11]],
+      [[-0.161, 0.352], [-0.215, 0.352], [-0.215, -0.352], [-0.161, -0.352]]
+  ]
+  mosaic_unit_vertices: [[-1., 1.], [1., 1.], [1., -1.], [-1., -1.]]
+  wheelbase: 0.2
+  min_turning_r: 0.0
+
+reference_path:
+  enabled: True
+  path_type: 'line'
+  grid_resolution: 0.1
+  grid_inflation: 0.3
+  weight: 0.01
+
+# Adapted to exact_mppi_jax/global_ref_path.py schema:
+# goal is delivered on /goal_pose by corridor_goal_trigger; the straight
+# 'line' reference path is regenerated from the TF/odom start toward it.
+global_ref_path:
+  publish_frequency: 10.0
+  local_horizon: 30
+  local_stride: 1
+  path_resolution: 0.2
+  use_tf_pose: true
+  start: [0.0, 9.5, 0.0]
+
+ros2:
+  control_frequency: 30.0
+  map_frame: "odom"
+  base_frame: "base_footprint"
+  odom_topic: "/odom"
+  scan_range_min: 0.3
+  scan_range_max: 8.0
+  scan_angle_min: -3.14159
+  scan_angle_max: 3.14159
+  enable_rollout_markers: False
+  enable_visualization: True
+  enable_robot_marker: True
+  enable_optimal_path_markers: True
+  optimal_path_markers_topic: /mppi_plan

@@ -30,6 +30,12 @@ config_files = glob.glob('config/*.yaml')
 planner_config_files = glob.glob('config/mppi_config/*')
 real_map_files = glob.glob('config/real_map/*')
 rviz_files = glob.glob('rviz/*.rviz')
+world_files = glob.glob('worlds/*')
+model_files = [p for p in glob.glob('models/pedestrian_obstacle/*')
+               if not (p.endswith('/meshes') or p.endswith('/materials'))]
+mesh_files = glob.glob('models/pedestrian_obstacle/meshes/*')
+texture_files = glob.glob('models/pedestrian_obstacle/materials/textures/*')
+script_files = glob.glob('models/pedestrian_obstacle/materials/scripts/*')
 
 setup(
     name=package_name,
@@ -43,6 +49,11 @@ setup(
         ('share/' + package_name + '/config/mppi_config', planner_config_files),
         ('share/' + package_name + '/config/real_map', real_map_files),
         ('share/' + package_name + '/rviz', rviz_files),
+        ('share/' + package_name + '/worlds', world_files),
+        ('share/' + package_name + '/models/pedestrian_obstacle', model_files),
+        ('share/' + package_name + '/models/pedestrian_obstacle/meshes', mesh_files),
+        ('share/' + package_name + '/models/pedestrian_obstacle/materials/textures', texture_files),
+        ('share/' + package_name + '/models/pedestrian_obstacle/materials/scripts', script_files),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -58,6 +69,9 @@ setup(
             'global_ref_path_node = exact_mppi_jax.global_ref_path_node:main',
             'cost_breakdown_viz = exact_mppi_jax.cost_breakdown_viz:main',
             'cmd_vel_watchdog = exact_mppi_jax.cmd_vel_watchdog:main',
+            'gazebo_dynamic_obstacles = exact_mppi_jax.gazebo_dynamic_obstacles:main',
+            'corridor_goal_trigger = exact_mppi_jax.corridor_goal_trigger:main',
+            'start_obstacles_on_goal = exact_mppi_jax.start_obstacles_on_goal:main',
         ],
     },
 )

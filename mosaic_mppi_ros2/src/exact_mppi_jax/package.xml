@@ -23,6 +23,14 @@
 
   <!-- Used by the launch file -->
   <exec_depend>ddr_minimal_sim</exec_depend>
+
+  <!-- Gazebo simulation (sim_limo_corridor_launch.py) -->
+  <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>gazebo_plugins</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>limo_description</exec_depend>
   <export>
     <build_type>ament_python</build_type>
   </export>
