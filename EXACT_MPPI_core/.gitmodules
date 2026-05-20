@@ -1,3 +1,0 @@
-[submodule "third_party/square_covering"]
-	path = third_party/square_covering
-	url = git@github.com:AgRoboticsResearch/square_covering.git

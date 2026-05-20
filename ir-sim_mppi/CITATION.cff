@@ -3,9 +3,7 @@ type: software
 message: "If you use IR-SIM in your work, please cite it as below."
 title: "IR-SIM: An open-source lightweight simulator for robot navigation, control, and learning"
 authors:
-  - family-names: "Han"
-    given-names:  "Ruihua"
+  - name: "Anonymous Authors"
 contributors:
   - name: "Contributors to IR-SIM"
-url:     "https://github.com/hanruihua/ir-sim"
 license: "MIT"

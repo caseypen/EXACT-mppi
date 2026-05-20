@@ -2,9 +2,7 @@
 
 Probabilistic Road Map (PRM) Planner
 
-author: Atsushi Sakai (@Atsushi_twi)
-
-adapted by: Reinis Cimurs
+Author and adapter information omitted for anonymous review.
 
 """
 

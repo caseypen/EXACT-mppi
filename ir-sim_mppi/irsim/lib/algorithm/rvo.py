@@ -1,9 +1,9 @@
 """
 This file is the implementation of the Reciprocal Velocity Obstacle (RVO) algorithm for multi-robot collision avoidance.
 
-Author: Ruihua Han
+Author information omitted for anonymous review.
 
-reference: https://github.com/MengGuo/RVO_Py_MAS
+Reference implementation details omitted for anonymous review.
 """
 
 from math import asin, atan2, cos, pi, sin

@@ -303,7 +303,7 @@ def main(
     cfg = load_env_config(env_path)
 
     if save_animation:
-        save_dir = Path("/home/pengchen/mppi_pkg/Experiment2")
+        save_dir = Path("./")
         save_dir.mkdir(parents=True, exist_ok=True)
         path_manager.ani_path = str(save_dir)
         print(f"Animation will be saved to {save_dir}/{ani_name}.gif")

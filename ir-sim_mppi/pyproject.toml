@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 name = "ir-sim"
 version = "2.8.2"
 authors = [
-  { name="Han Ruihua", email="hanrh@connect.hku.hk" },
+  { name="Anonymous Maintainer", email="anonymous@example.com" },
 ]
 description = "IR-SIM is an open-source, lightweight robot simulator based on Python, designed for robotics navigation, control, and learning. This simulator provides a simple and user-friendly framework for simulating robots, sensors, and environments, facilitating the development and testing of robotics algorithms with minimal hardware requirements."
 readme = "README.md"
@@ -131,5 +131,3 @@ possibly-unbound-attribute = "ignore"
 [project.urls]
 "Homepage" = "https://ir-sim.readthedocs.io/en/stable/"
 "Documentation" = "https://ir-sim.readthedocs.io/en/stable/"
-"Repository" = "https://github.com/hanruihua/ir-sim"
-"Issues" = "https://github.com/hanruihua/ir-sim/issues"

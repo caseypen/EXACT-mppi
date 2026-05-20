@@ -224,11 +224,11 @@ Key classes to modify:
 ## License & Attribution
 
 **License:** GNU GPL v3.0 (see [workspace LICENSE](../../LICENSE))
-**Author:** KevinLADLee
+**Author:** Anonymous
 **Contributing:** See [workspace README](../../README.md#contributing)
 
 **Acknowledgments:**
-- Simulator design inspired by [DDR-opt](https://github.com/ZJU-FAST-Lab/DDR-opt)
+- Simulator design inspired by public DDR planning examples.
 - For complete acknowledgments, see [workspace README](../../README.md#acknowledgments)
 
 ---

@@ -4,7 +4,7 @@
   <name>exact_mppi_jax</name>
   <version>0.0.1</version>
   <description>ROS2 bridge package for the installed exact_mppi JAX controller</description>
-  <maintainer email="kevinladlee@gmail.com">kevinlad</maintainer>
+  <maintainer email="anonymous@example.com">anonymous</maintainer>
   <license>GPL-3.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>

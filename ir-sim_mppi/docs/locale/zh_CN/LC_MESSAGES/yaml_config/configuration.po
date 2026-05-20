@@ -1,16 +1,16 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2024, Ruihua Han
+# Copyright (C) 2024, Anonymous Contributors
 # This file is distributed under the same license as the IR-SIM package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# Anonymous Translator <anonymous@example.com>, 2025.
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"Report-Msgid-Bugs-To: anonymous@example.com\n"
 "POT-Creation-Date: 2026-01-01 17:25+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Anonymous Translator <anonymous@example.com>\n"
 "Language: zh_CN\n"
-"Language-Team: zh_CN <LL@li.org>\n"
+"Language-Team: zh_CN <anonymous@example.com>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -655,14 +655,12 @@ msgid ""
 "[HM3D](https://aihabitat.org/datasets/hm3d/), "
 "[MatterPort3D](https://niessner.github.io/Matterport/), "
 "[Gibson](http://gibsonenv.stanford.edu/database/), etc. See "
-"[here](https://github.com/hanruihua/ir-"
-"sim/tree/features/irsim/world/map/binary_map_generator_hm3d) for more "
+"`irsim/world/map/binary_map_generator_hm3d` for more "
 "details."
 msgstr ""
 "**可用地图**：我们在 `irsim/world/map` 文件夹中提供了一些示例地图；你也可以使用自己的地图，例如来自 "
 "[HM3D](https://aihabitat.org/datasets/hm3d/)、[MatterPort3D](https://niessner.github.io/Matterport/)、[Gibson](http://gibsonenv.stanford.edu/database/)"
-" 等 3D 数据集。更多细节可查看[这里](https://github.com/hanruihua/ir-"
-"sim/tree/features/irsim/world/map/binary_map_generator_hm3d)。"
+" 等 3D 数据集。更多细节可查看 `irsim/world/map/binary_map_generator_hm3d`。"
 
 #: ../../source/yaml_config/configuration.md:212
 msgid "**`mdownsample`** (`int`, default: `1`)"
@@ -2771,4 +2769,3 @@ msgstr "**绘图选项**：若 `plot` 位于对象配置内部，可为单个对
 
 #~ msgid "**`rvo`** — Collision avoidance algorithm"
 #~ msgstr "**`rvo`** — 碰撞避让算法"
-

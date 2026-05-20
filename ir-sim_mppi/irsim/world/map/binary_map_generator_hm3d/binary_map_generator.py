@@ -4,7 +4,7 @@ Generate navigable 2D binary maps from 3D scene datasets.
 Extract and processes navigation mesh vertices from 3D scene datasets
 (like Habitat-Matterport 3D) to create 2D occupancy binary maps.
 
-Author: Guoliang Li
+Author information omitted for anonymous review.
 """
 
 import os

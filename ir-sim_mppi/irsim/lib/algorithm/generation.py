@@ -1,7 +1,7 @@
 """
 This file is the implementation of the generation of random polygons.
 
-Author: Ruihua Han
+Author information omitted for anonymous review.
 """
 
 import math

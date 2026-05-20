@@ -59,11 +59,11 @@ pip or conda for installation.
 
         Perform the following steps to install IR-SIM from source:
 
-        1. Clone the official `IR-SIM git repository`_, or a newly minted fork of the IR-SIM repository.
+        1. Clone the anonymous review repository, or use a newly minted fork of it.
 
         ::
 
-            git clone https://github.com/hanruihua/ir-sim.git
+            git clone <anonymous-review-repository-url>
 
         2. Navigate to the top-level of the cloned directory.
 
@@ -203,13 +203,11 @@ Install with Additional Features
 .. _SciPy: https://www.scipy.org/
 .. _pytest: https://docs.pytest.org/en/latest/
 .. _pynput: https://pypi.org/project/pynput/
-.. _IR-SIM git repository: https://github.com/hanruihua/ir-sim
 .. _pip: https://pip.pypa.io/
-.. _pyproject.toml: https://github.com/hanruihua/ir-sim/blob/main/pyproject.toml
+.. _pyproject.toml: ../../pyproject.toml
 .. _pytest-cov: https://pytest-cov.readthedocs.io/
 .. _Ruff: https://docs.astral.sh/ruff/
 .. _black: https://black.readthedocs.io/
 .. _ty: https://docs.astral.sh/ty/
-
 
 

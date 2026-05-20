@@ -927,7 +927,7 @@ def main(
     animation_buffer_existed = animation_buffer_dir.exists()
 
     if save_animation:
-        save_dir = Path("/home/pengchen/mppi_pkg/Experiment2")
+        save_dir = Path("./")
         save_dir.mkdir(parents=True, exist_ok=True)
         path_manager.ani_path = str(save_dir)
         print(f"Animation will be saved to {save_dir}/{ani_name}_{robot_shape}.gif")

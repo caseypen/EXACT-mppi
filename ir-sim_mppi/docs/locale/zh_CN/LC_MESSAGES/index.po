@@ -1,7 +1,7 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2024, Ruihua Han
+# Copyright (C) 2024, Anonymous Contributors
 # This file is distributed under the same license as the IR-SIM package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+# Anonymous Translator <anonymous@example.com>, 2025.
 #
 #, fuzzy
 msgid ""
@@ -10,9 +10,9 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-30 16:34+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Anonymous Translator <anonymous@example.com>\n"
 "Language: zh_CN\n"
-"Language-Team: zh_CN <LL@li.org>\n"
+"Language-Team: zh_CN <anonymous@example.com>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -185,34 +185,6 @@ msgid "Projects using IR-SIM"
 msgstr "基于 IR-SIM 的项目"
 
 #: ../../source/index.rst:208
-msgid "Academic projects"
-msgstr "科研项目"
-
-#: ../../source/index.rst:211
-msgid "`rl-rvo-nav (RAL & ICRA2023) <https://github.com/hanruihua/rl_rvo_nav>`_"
-msgstr "`rl-rvo-nav（RAL & ICRA2023） <https://github.com/hanruihua/rl_rvo_nav>`_"
-
-#: ../../source/index.rst:212
-msgid "`RDA_planner (RAL & IROS2023) <https://github.com/hanruihua/RDA_planner>`_"
-msgstr "`RDA_planner（RAL & IROS2023） <https://github.com/hanruihua/RDA_planner>`_"
-
-#: ../../source/index.rst:213
-msgid "`NeuPAN (T-RO 2025) <https://github.com/hanruihua/NeuPAN>`_"
-msgstr "`NeuPAN（T-RO 2025） <https://github.com/hanruihua/NeuPAN>`_"
-
-#: ../../source/index.rst:215
-msgid "Deep Reinforcement Learning Projects"
-msgstr "深度强化学习项目"
-
-#: ../../source/index.rst:218
-msgid ""
-"`DRL-robot-navigation-IR-SIM <https://github.com/reiniscimurs/DRL-robot-"
-"navigation-IR-SIM>`_"
-msgstr ""
-"`DRL-robot-navigation-IR-SIM <https://github.com/reiniscimurs/DRL-robot-"
-"navigation-IR-SIM>`_"
-
-#: ../../source/index.rst:219
-msgid "`AutoNavRL <https://github.com/harshmahesheka/AutoNavRL>`_"
-msgstr "`AutoNavRL <https://github.com/harshmahesheka/AutoNavRL>`_"
+msgid "External project links are omitted for anonymous review."
+msgstr "匿名评审版本中省略外部项目链接。"
 

@@ -2,9 +2,7 @@
 
 Path planning Sample Code with Randomized Rapidly-Exploring Random Trees (RRT)
 
-author: AtsushiSakai(@Atsushi_twi)
-
-adapted by: Reinis Cimurs
+Author and adapter information omitted for anonymous review.
 
 """
 

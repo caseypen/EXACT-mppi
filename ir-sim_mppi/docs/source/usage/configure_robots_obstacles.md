@@ -84,7 +84,7 @@ The robot has a default behavior of moving from its initial position to the goal
 - **`env.end()`:** Ensures that the simulation is terminated gracefully, releasing any resources or handles. Provides a clean exit. See [env.end](#irsim.env.env_base.EnvBase.end) for more details.
 
 :::{Note}
-The [rda_planner](https://github.com/hanruihua/RDA-planner) is a case of using the `env.step(velocity)` to run your own control algorithm.
+An external planner integration example can use `env.step(velocity)` to run a custom control algorithm.
 :::
 
 :::{Note}
@@ -273,7 +273,6 @@ obstacle:
 ```
 :::
 ::::
-
 
 
 

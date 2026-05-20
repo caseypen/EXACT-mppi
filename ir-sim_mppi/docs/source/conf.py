@@ -38,8 +38,8 @@ os.environ["PYNPUT_BACKEND"] = "dummy"
 # -- Project information -----------------------------------------------------
 
 project = "IR-SIM"
-copyright = "2024, Ruihua Han"
-author = "Ruihua Han"
+copyright = "2024, Anonymous Contributors"
+author = "Anonymous Contributors"
 
 language = 'en'
 
@@ -218,11 +218,6 @@ source_suffix = {
 html_theme_options = {
     "icon_links": [
         {
-            "name": "GitHub",
-            "url": "https://github.com/hanruihua/ir-sim",
-            "icon": "fa-brands fa-github",
-        },
-        {
             "name": "PyPI",
             "url": "https://pypi.org/project/ir-sim/",
             "icon": "fa-custom fa-pypi",
@@ -239,7 +234,7 @@ html_theme_options = {
         "navbar-icon-links",
     ],
     "switcher": {
-        "json_url": "https://raw.githubusercontent.com/hanruihua/ir-sim/main/docs/source/_static/switcher.json",
+        "json_url": "_static/switcher.json",
         "version_match": release,
     },
     # Primary sidebar navigation configuration

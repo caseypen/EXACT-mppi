@@ -1,7 +1,7 @@
 """
 This file is the implementation of the kinematics for different robots.
 
-reference: Lynch, Kevin M., and Frank C. Park. Modern Robotics: Mechanics, Planning, and Control. 1st ed. Cambridge, MA: Cambridge University Press, 2017.
+Reference details omitted for anonymous review.
 """
 
 from math import cos, sin, tan
