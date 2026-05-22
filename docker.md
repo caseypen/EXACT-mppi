@@ -1,34 +1,32 @@
 # Docker Guide
 
-This repository can be developed and tested inside Docker. The recommended setup is:
+This repository can be built and run inside the CUDA-enabled ROS 2 Humble image
+defined at `docker/Dockerfile.humble-cuda`.
 
-- Ubuntu 22.04
+The current Dockerfile has been verified to build successfully. It uses:
+
+- `nvidia/cuda:12.1.1-devel-ubuntu22.04`
 - ROS 2 Humble
-- NVIDIA CUDA 12
-- Python virtual environment included in the image
+- Gazebo, RViz, `xacro`, `robot_state_publisher`, and `joint_state_publisher`
+- a Python virtual environment at `/opt/exact_mppi/venv`
+- CUDA 12 JAX via `jax[cuda12]`
+- `python3-tk` for `gctl`
+- `lxml` for Gazebo `spawn_entity.py` when the venv is active
+- editable installs of `ir-sim_mppi` and `EXACT_MPPI_core`
 
-The repository already includes a base image definition at `docker/Dockerfile.humble-cuda`.
-
-## What This Container Is For
-
-Use the Docker environment when you want:
-
-- a reproducible Ubuntu 22.04 + ROS 2 Humble workspace
-- GPU support for JAX
-- Gazebo and RViz-based ROS 2 demos without polluting the host system
-
-The provided Dockerfile includes Gazebo, `gazebo_ros`, `xacro`, and `rviz2` for ROS 2 simulation workflows in `mosaic_mppi_ros2`.
+Ubuntu and ROS 2 apt sources are configured to use the Tsinghua mirrors in the
+image, which is useful for builds from China.
 
 ## Prerequisites
 
-Before building the container, make sure the host machine has:
+Install these on the host before building or running the image:
 
 - Docker
+- NVIDIA driver
 - NVIDIA Container Toolkit
-- a working NVIDIA driver
-- X11 available if you want to run Gazebo or RViz with GUI
+- X11 support if you want to open Gazebo or RViz windows
 
-Quick checks on the host:
+Quick host checks:
 
 ```bash
 docker --version
@@ -37,20 +35,26 @@ echo "$DISPLAY"
 ls /tmp/.X11-unix
 ```
 
-If `nvidia-smi` fails on the host, fix the GPU driver stack before debugging the container.
+If `nvidia-smi` fails on the host, fix the host NVIDIA driver/toolkit setup
+before debugging the container.
 
 ## Build the Image
 
-From the repository root:
+Run this from the repository root:
 
 ```bash
-cd EXACT-mppi
 docker build -f docker/Dockerfile.humble-cuda -t exact-mppi:humble-cuda .
+```
+
+If you need a fully fresh rebuild:
+
+```bash
+docker build --no-cache -f docker/Dockerfile.humble-cuda -t exact-mppi:humble-cuda .
 ```
 
 ## Run the Container
 
-From the repository root, start a headless container for building and command-line work:
+For command-line development:
 
 ```bash
 docker run -it --rm \
@@ -63,9 +67,11 @@ docker run -it --rm \
   exact-mppi:humble-cuda
 ```
 
-If you want to open Gazebo or RViz windows from inside the container, allow X11 access first:
+For Gazebo or RViz, allow local X11 access on the host first. Run these on the
+host, not inside Docker:
 
 ```bash
+xhost +SI:localuser:root
 xhost +local:root
 ```
 
@@ -76,7 +82,7 @@ docker run -it --rm \
   --gpus all \
   --network host \
   --ipc host \
-  -e DISPLAY=$DISPLAY \
+  -e DISPLAY="$DISPLAY" \
   -e QT_X11_NO_MITSHM=1 \
   -e NVIDIA_VISIBLE_DEVICES=all \
   -e NVIDIA_DRIVER_CAPABILITIES=all \
@@ -87,59 +93,38 @@ docker run -it --rm \
   exact-mppi:humble-cuda
 ```
 
-This command mounts the repository into the container and drops you into the project workspace.
-
-After GUI work, you can revoke the X11 permission:
+After GUI work, revoke the temporary X11 permission on the host:
 
 ```bash
+xhost -SI:localuser:root
 xhost -local:root
 ```
 
-## Use the Python Environment
+## Python and ROS Environment
 
-The Docker image creates a Python virtual environment at `/opt/exact_mppi/venv`, puts it on `PATH`, and installs:
+Interactive shells source ROS 2 Humble and activate the Python virtual
+environment through `/root/.bashrc`.
 
-- `jax[cuda12]`
-- `ir-sim_mppi` in editable mode
-- `EXACT_MPPI_core` in editable mode
-
-Inside the container, confirm that the venv Python and local packages are active:
+Inside the container, verify the active environment:
 
 ```bash
 which python
 python -m pip --version
-python -c "import irsim; from exact_mppi.mppi_jax.controller import MPPIController; import jax; print(jax.devices())"
+echo "$ROS_DISTRO"
 ```
 
-Because these are editable installs and the repository is mounted at `/workspace/EXACT-mppi`, normal Python source edits are picked up without reinstalling. If package metadata or dependencies change, rebuild the Docker image.
-
-## Build the ROS 2 Workspace
-
-The ROS 2 bridge workspace is located in `mosaic_mppi_ros2`.
-
-Inside the container:
+For non-interactive Docker commands, source the environment explicitly:
 
 ```bash
-cd mosaic_mppi_ros2
-./setup.sh
-./build.sh
-source install/setup.bash
+source /opt/ros/humble/setup.bash
+source /opt/exact_mppi/venv/bin/activate
 ```
 
-If `setup.sh` is not executable:
+Because the repository is mounted at `/workspace/EXACT-mppi`, local source edits
+are visible inside the container immediately. Rebuild the image when package
+metadata, dependencies, or Dockerfile layers change.
 
-```bash
-chmod +x setup.sh build.sh
-```
-
-## Verification
-
-Check that ROS 2 is available:
-
-```bash
-source ~/.bashrc
-ros2 --version
-```
+## Verify the Image
 
 Check that JAX can see the GPU:
 
@@ -147,26 +132,90 @@ Check that JAX can see the GPU:
 python -c "import jax; print(jax.devices())"
 ```
 
-Check that RViz is installed:
+Check that the local Python packages import:
 
 ```bash
-source ~/.bashrc
-rviz2
+python -c "import irsim, lxml; from exact_mppi.mppi_jax.controller import MPPIController; print('imports ok')"
+python -c "import tkinter, gctl; print('gctl ok')"
 ```
 
-## Run a First Example
+Check that ROS 2 and RViz are available:
+
+```bash
+ros2 pkg list | head
+which rviz2
+```
+
+## Build the ROS 2 Workspace
+
+The ROS 2 bridge workspace is in `mosaic_mppi_ros2`.
+
+Inside Docker, you run as `root`, and the current image does not install
+`sudo`. Use `apt-get` directly for any remaining ROS workspace dependencies:
+
+```bash
+apt-get update && apt-get install -y \
+  ros-humble-tf-transformations \
+  ros-humble-tf2-tools \
+  ros-humble-tf2-ros \
+  ros-humble-tf2-geometry-msgs \
+  ros-humble-nav-msgs \
+  ros-humble-sensor-msgs \
+  ros-humble-geometry-msgs \
+  ros-humble-visualization-msgs \
+  ros-humble-joint-state-publisher-gui \
+  libeigen3-dev \
+  libyaml-cpp-dev \
+  cmake
+```
+
+Then build:
+
+```bash
+cd /workspace/EXACT-mppi/mosaic_mppi_ros2
+./build.sh
+source install/setup.bash
+```
+
+If the scripts are not executable:
+
+```bash
+chmod +x setup.sh build.sh
+```
+
+`./setup.sh` is still useful for native host setup, but inside this Docker image
+the direct `apt-get` command above is the safer path because the container runs
+as `root`.
+
+## Run Examples
 
 Core Python example:
 
 ```bash
-source .exact_mppi/bin/activate
+cd /workspace/EXACT-mppi
 python EXACT_MPPI_core/example/corridor_dynamic_random_jax/mppi_jax_anyshape.py --robot-shape f
 ```
 
-ROS 2 simulation example:
+ROS 2 corridor simulator:
 
 ```bash
-cd mosaic_mppi_ros2
+cd /workspace/EXACT-mppi/mosaic_mppi_ros2
+source install/setup.bash
+ros2 launch exact_mppi_jax sim_corridor_external_ref_launch.py
+```
+
+ROS 2 T-shape simulator:
+
+```bash
+cd /workspace/EXACT-mppi/mosaic_mppi_ros2
+source install/setup.bash
+ros2 launch exact_mppi_jax sim_tshape_external_ref_launch.py
+```
+
+Gazebo LIMO corridor simulation:
+
+```bash
+cd /workspace/EXACT-mppi/mosaic_mppi_ros2
 source install/setup.bash
 ros2 launch exact_mppi_jax sim_limo_corridor_launch.py auto_goal:=true
 ```
@@ -175,40 +224,47 @@ ros2 launch exact_mppi_jax sim_limo_corridor_launch.py auto_goal:=true
 
 `rviz2: command not found`
 
-Install:
-
 ```bash
-apt install -y ros-humble-rviz2
+apt-get update && apt-get install -y ros-humble-rviz2
 ```
 
 `package 'gazebo_ros' not found`
 
-Install:
-
 ```bash
-apt install -y ros-humble-gazebo-ros-pkgs
+apt-get update && apt-get install -y ros-humble-gazebo-ros-pkgs
 ```
 
 `file not found: xacro`
 
-Install:
-
 ```bash
-apt install -y ros-humble-xacro
+apt-get update && apt-get install -y ros-humble-xacro
 ```
 
-Gazebo or RViz cannot open a window
+`sudo: command not found`
 
-Check:
+The Docker image runs as `root`, so use `apt-get` directly instead of `sudo`.
 
-- `echo $DISPLAY` is not empty
-- the X11 socket directory is mounted into the container
-- `xhost +local:root` was run on the host
+Gazebo or RViz cannot open a window:
 
-JAX does not use GPU
+- make sure `echo "$DISPLAY"` is not empty on the host
+- make sure `/tmp/.X11-unix` is mounted into the container
+- run `xhost +SI:localuser:root` and `xhost +local:root` on the host before
+  starting the GUI container
 
-Check:
+`Authorization required, but no authorization protocol specified`
 
-- `nvidia-smi` works on the host
-- the container was started with `--gpus all`
-- the installed JAX package matches the CUDA major version
+This is an X11 authorization failure. In a separate host terminal, run:
+
+```bash
+xhost +SI:localuser:root
+xhost +local:root
+```
+
+Then retry `rviz2` in the already running container. If you restart the
+container later, keep the same Docker run command.
+
+JAX does not use the GPU:
+
+- make sure `nvidia-smi` works on the host
+- start the container with `--gpus all`
+- keep the CUDA-enabled JAX install from the Dockerfile: `jax[cuda12]`
