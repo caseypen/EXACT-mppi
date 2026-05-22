@@ -38,9 +38,17 @@ RUN add-apt-repository universe && \
     https://mirrors.tuna.tsinghua.edu.cn/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
     > /etc/apt/sources.list.d/ros2.list
 
-# 安装 ROS 2 Humble 和 colcon
+# 安装 ROS 2 Humble、Gazebo/RViz 仿真工具和 colcon
 RUN apt-get update && apt-get install -y \
     ros-humble-ros-base \
+    gazebo \
+    ros-humble-gazebo-ros-pkgs \
+    ros-humble-gazebo-plugins \
+    ros-humble-gazebo-msgs \
+    ros-humble-xacro \
+    ros-humble-rviz2 \
+    ros-humble-joint-state-publisher \
+    ros-humble-robot-state-publisher \
     python3-rosdep \
     python3-argcomplete \
     python3-colcon-common-extensions \
@@ -49,10 +57,26 @@ RUN apt-get update && apt-get install -y \
 RUN rosdep init || true
 RUN rosdep update || true
 
-RUN python3 -m pip install --upgrade pip setuptools wheel
+ENV VIRTUAL_ENV=/opt/exact_mppi/venv
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
-RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
+RUN python3 -m venv "$VIRTUAL_ENV" && \
+    python -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# 安装 CUDA 12 JAX；放在复制本地源码前，避免代码改动触发重复下载大包
+RUN python -m pip install -U "jax[cuda12]"
 
 WORKDIR /workspace/EXACT-mppi
+
+COPY ir-sim_mppi/pyproject.toml ir-sim_mppi/README.md ir-sim_mppi/LICENSE ./ir-sim_mppi/
+COPY ir-sim_mppi/irsim ./ir-sim_mppi/irsim
+RUN python -m pip install --no-cache-dir -e ./ir-sim_mppi
+
+COPY EXACT_MPPI_core/pyproject.toml EXACT_MPPI_core/README.md EXACT_MPPI_core/LICENSE ./EXACT_MPPI_core/
+COPY EXACT_MPPI_core/exact_mppi ./EXACT_MPPI_core/exact_mppi
+RUN python -m pip install --no-cache-dir -e ./EXACT_MPPI_core
+
+RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc && \
+    echo "source ${VIRTUAL_ENV}/bin/activate" >> /root/.bashrc
 
 CMD ["/bin/bash"]

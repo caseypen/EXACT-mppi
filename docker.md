@@ -5,7 +5,7 @@ This repository can be developed and tested inside Docker. The recommended setup
 - Ubuntu 22.04
 - ROS 2 Humble
 - NVIDIA CUDA 12
-- Python virtual environment inside the repository
+- Python virtual environment included in the image
 
 The repository already includes a base image definition at `docker/Dockerfile.humble-cuda`.
 
@@ -17,7 +17,7 @@ Use the Docker environment when you want:
 - GPU support for JAX
 - Gazebo and RViz-based ROS 2 demos without polluting the host system
 
-The provided Dockerfile is a good base for development. For ROS 2 simulation workflows in `mosaic_mppi_ros2`, you should additionally install Gazebo, `gazebo_ros`, `xacro`, and `rviz2` inside the image.
+The provided Dockerfile includes Gazebo, `gazebo_ros`, `xacro`, and `rviz2` for ROS 2 simulation workflows in `mosaic_mppi_ros2`.
 
 ## Prerequisites
 
@@ -34,7 +34,7 @@ Quick checks on the host:
 docker --version
 nvidia-smi
 echo "$DISPLAY"
-ls "$XSOCK"
+ls /tmp/.X11-unix
 ```
 
 If `nvidia-smi` fails on the host, fix the GPU driver stack before debugging the container.
@@ -50,22 +50,26 @@ docker build -f docker/Dockerfile.humble-cuda -t exact-mppi:humble-cuda .
 
 ## Run the Container
 
-Allow the local root user in the container to access your X server:
+From the repository root, start a headless container for building and command-line work:
+
+```bash
+docker run -it --rm \
+  --gpus all \
+  --network host \
+  --ipc host \
+  -v "$(pwd):/workspace/EXACT-mppi" \
+  -w /workspace/EXACT-mppi \
+  --name exact-mppi-dev \
+  exact-mppi:humble-cuda
+```
+
+If you want to open Gazebo or RViz windows from inside the container, allow X11 access first:
 
 ```bash
 xhost +local:root
 ```
 
-Set two shell variables on the host before starting the container:
-
-```bash
-export XSOCK=...
-export CONTAINER_WS=...
-```
-
-`XSOCK` should point to the host X11 socket directory, and `CONTAINER_WS` should be the workspace path you want to use inside the container.
-
-Start the container with GPU and X11 forwarding:
+Then start the GUI-enabled container:
 
 ```bash
 docker run -it --rm \
@@ -76,61 +80,38 @@ docker run -it --rm \
   -e QT_X11_NO_MITSHM=1 \
   -e NVIDIA_VISIBLE_DEVICES=all \
   -e NVIDIA_DRIVER_CAPABILITIES=all \
-  -v "$XSOCK:$XSOCK:rw" \
-  -v "$(pwd):$CONTAINER_WS" \
-  -w "$CONTAINER_WS" \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v "$(pwd):/workspace/EXACT-mppi" \
+  -w /workspace/EXACT-mppi \
   --name exact-mppi-dev \
   exact-mppi:humble-cuda
 ```
 
 This command mounts the repository into the container and drops you into the project workspace.
 
-## Install Additional ROS 2 Simulation Tools
-
-The base Dockerfile currently installs `ros-humble-ros-base`, which is enough for headless ROS 2 development but not enough for the Gazebo and RViz launch files used in `mosaic_mppi_ros2`.
-
-Inside the container, install the missing simulation packages:
+After GUI work, you can revoke the X11 permission:
 
 ```bash
-apt update
-apt install -y \
-  gazebo \
-  ros-humble-gazebo-ros-pkgs \
-  ros-humble-gazebo-plugins \
-  ros-humble-gazebo-msgs \
-  ros-humble-xacro \
-  ros-humble-rviz2 \
-  ros-humble-joint-state-publisher \
-  ros-humble-robot-state-publisher
+xhost -local:root
 ```
 
-If you want these packages to be available every time you build the image, add the same package list to `docker/Dockerfile.humble-cuda`.
+## Use the Python Environment
 
-## Create the Python Environment
+The Docker image creates a Python virtual environment at `/opt/exact_mppi/venv`, puts it on `PATH`, and installs:
 
-Inside the container:
+- `jax[cuda12]`
+- `ir-sim_mppi` in editable mode
+- `EXACT_MPPI_core` in editable mode
+
+Inside the container, confirm that the venv Python and local packages are active:
 
 ```bash
-cd .
-python3 -m venv .exact_mppi
-source .exact_mppi/bin/activate
-python -m pip install --upgrade pip setuptools wheel
+which python
+python -m pip --version
+python -c "import irsim; from exact_mppi.mppi_jax.controller import MPPIController; import jax; print(jax.devices())"
 ```
 
-Install the local Python packages:
-
-```bash
-python -m pip install -e ./ir-sim_mppi
-python -m pip install -e ./EXACT_MPPI_core
-```
-
-For GPU-enabled JAX on CUDA 12:
-
-```bash
-python -m pip install -U "jax[cuda12]"
-```
-
-If your environment targets a different CUDA major version, choose the matching JAX build instead.
+Because these are editable installs and the repository is mounted at `/workspace/EXACT-mppi`, normal Python source edits are picked up without reinstalling. If package metadata or dependencies change, rebuild the Docker image.
 
 ## Build the ROS 2 Workspace
 
@@ -163,7 +144,6 @@ ros2 --version
 Check that JAX can see the GPU:
 
 ```bash
-source .exact_mppi/bin/activate
 python -c "import jax; print(jax.devices())"
 ```
 
@@ -232,7 +212,3 @@ Check:
 - `nvidia-smi` works on the host
 - the container was started with `--gpus all`
 - the installed JAX package matches the CUDA major version
-
-## Recommended Next Step
-
-If you want a one-command setup for new users, the next cleanup step is to move the simulation packages from the manual `apt install` section into `docker/Dockerfile.humble-cuda`, so the image is ready for `mosaic_mppi_ros2` immediately after `docker build`.
