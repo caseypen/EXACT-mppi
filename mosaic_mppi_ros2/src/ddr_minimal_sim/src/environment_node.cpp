@@ -74,7 +74,7 @@ void EnvironmentNode::loadParameters() {
   visualization_.obstacle_height = this->get_parameter("visualization.obstacle_height").as_double();
   visualization_.marker_alpha = this->get_parameter("visualization.marker_alpha").as_double();
 
-  // Validate map parameters (防止除零崩溃)
+  // Validate map parameters.
   if (map_params_.resolution <= 0.0) {
     RCLCPP_ERROR(this->get_logger(),
                  "Map resolution must be positive, got %.6f m",

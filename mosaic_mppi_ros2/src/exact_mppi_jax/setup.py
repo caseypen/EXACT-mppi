@@ -57,8 +57,6 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='anonymous',
-    maintainer_email='anonymous@example.com',
     description='ROS2 bridge package for the installed exact_mppi JAX controller',
     license='GPL-3.0',
     keywords=['ROS'],

@@ -63,7 +63,7 @@ void LaserSimulator::loadParameters() {
   noise_params_.enable_noise = this->get_parameter("noise.enable_noise").as_bool();
   noise_params_.noise_std_dev = this->get_parameter("noise.noise_std_dev").as_double();
 
-  // Validate laser parameters (防止除零和无效配置)
+  // Validate laser parameters.
   if (laser_params_.angle_increment <= 0.0) {
     RCLCPP_ERROR(this->get_logger(),
                  "Laser angle_increment must be positive, got %.6f rad",

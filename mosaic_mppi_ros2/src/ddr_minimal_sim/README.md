@@ -224,7 +224,6 @@ Key classes to modify:
 ## License & Attribution
 
 **License:** GNU GPL v3.0 (see [workspace LICENSE](../../LICENSE))
-**Author:** Anonymous
 **Contributing:** See [workspace README](../../README.md#contributing)
 
 **Acknowledgments:**

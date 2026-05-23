@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
   <asset>
-    <contributor>
-      <author/>
-      <authoring_tool>FBX COLLADA exporter</authoring_tool>
-      <comments/>
-    </contributor>
     <created>2019-04-11T16:00:41Z</created>
     <keywords/>
     <modified>2019-04-11T16:00:41Z</modified>

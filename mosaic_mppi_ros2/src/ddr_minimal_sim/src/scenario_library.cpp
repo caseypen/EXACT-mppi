@@ -201,10 +201,10 @@ std::vector<Obstacle> generateCorridor(double map_width, double map_height) {
   // Wall 2: vertical, center-left
   obstacles.emplace_back(makeWall(-0.5, 0.3, 1.0, wall_thickness, M_PI / 2.0));
 
-  // Wall 3: angled ~60°, center-right
+  // Wall 3: angled about 60 degrees, center-right
   obstacles.emplace_back(makeWall(2.0, -0.2, 1.2, wall_thickness, 1.0));
 
-  // Wall 4: angled ~240°, right side
+  // Wall 4: angled about 240 degrees, right side
   obstacles.emplace_back(makeWall(4.0, 0.4, 1.0, wall_thickness, 4.2));
 
   return obstacles;

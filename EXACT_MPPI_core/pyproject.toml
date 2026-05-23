@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = 'exact_mppi'
 version = "1.0"
 requires-python = ">= 3.10"
-authors = [{name = "Anonymous Authors", email = "anonymous@example.com"}]
 description = "ExactMppi"
 readme = "README.md"
 dependencies = [
@@ -31,4 +30,3 @@ all = ['ir-sim>=2.4.0']
 
 [tool.setuptools.packages.find]
 include = ["exact_mppi*"]
-

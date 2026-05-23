@@ -4,7 +4,7 @@
   <name>limo_description</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="1561155732@qq.com">q</maintainer>
+  <maintainer email="maintainer@example.invalid">maintainer</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>

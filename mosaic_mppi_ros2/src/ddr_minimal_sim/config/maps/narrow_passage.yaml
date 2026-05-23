@@ -2,7 +2,7 @@
 # Extremely narrow passage requiring precise control
 # Passage width: 0.55m (~1.5x vehicle width of 0.363m)
 # Map coordinate system: center at origin (-5,-5) to (5,5)
-# Designed for limo vehicle (0.556m × 0.363m)
+# Designed for limo vehicle (0.556m by 0.363m)
 
 world:
   width: 10.0
@@ -39,7 +39,7 @@ obstacles:
     pose:
       x: -5.0
       y: 0.0
-      yaw: 1.5708  # π/2
+      yaw: 1.5708  # pi/2
 
   # Right boundary wall
   - shape:

@@ -1,8 +1,4 @@
-# Scaled Map from Scout Mini Example (factor 4.2)
-# World: 42x42, Offset [5,5] (meaning origin is at 0,0 relative to this map's bounds if 0,0 was bottom-left... wait, ddr_minimal_sim usually centers at 0,0)
-# NOTE: ddr_minimal_sim's simple map generator places objects at absolute coordinates (x,y).
-# The user's irsim env has offset [5,5] and range [5, 47].
-# This file defines objects using those absolute coordinates.
+# Imported IR-SIM map using absolute object coordinates.
 
 world:
   width: 100.0   # Slightly larger to fit everything comfortably (42+5+margin)

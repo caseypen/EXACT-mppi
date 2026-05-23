@@ -5,7 +5,7 @@
   <version>1.0.0</version>
   <description>Minimal differential drive robot simulator with configurable parameters</description>
 
-  <maintainer email="anonymous@example.com">anonymous</maintainer>
+  <maintainer email="maintainer@example.invalid">maintainer</maintainer>
   <license>GPL-3.0</license>
 
 

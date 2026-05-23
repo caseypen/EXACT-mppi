@@ -1,6 +1,6 @@
-# Anonymous Code Release
+# Docker Guide
 
-Anonymous code release for a pre-print submission. This repository contains two local Python packages:
+This repository contains two local Python packages:
 
 - `ir-sim_mppi`: simulator package used by the examples
 - `EXACT_MPPI_core`: MPPI controller package and example scripts
@@ -134,9 +134,3 @@ python -m pip install -e ./EXACT_MPPI_core
 ```
 
 Match the JAX wheel to your CUDA **major** version only (e.g. CUDA 12.x → `jax[cuda12]`). For the exact Python/CUDA combination on your machine, follow the official guide: https://docs.jax.dev/en/latest/installation.html
-
-The editable `exact_mppi` install brings in the default JAX-based controller dependencies. The legacy torch-based MPPI / DUNE modules are not installed by default; install them explicitly if needed:
-
-```bash
-python -m pip install torch arm-pytorch-utilities
-```

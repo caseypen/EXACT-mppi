@@ -79,8 +79,7 @@ RUN python3 -m venv --system-site-packages "$VIRTUAL_ENV" && \
     python -m pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python -m pip install --no-cache-dir lxml
 
-# Install CUDA 12 JAX and ROS/Gazebo Python runtime dependencies; placed before copying local source code
-# to avoid repeated downloading of large packages triggered by code changes
+# Cache Python runtime dependencies before copying local source.
 RUN python -m pip install --no-cache-dir -U "jax[cuda12]" lxml
 
 WORKDIR /workspace/EXACT-mppi

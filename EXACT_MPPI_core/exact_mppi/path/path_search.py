@@ -145,24 +145,16 @@ class PathSearch:
     # --- Heuristic Function ---
     def _heuristic(self, x1, y1, angle1, x2, y2, angle2, use_angle_heuristic=False):
         """
-        启发式函数：估计当前状态到目标的代价。
-        H = 欧氏距离 + (可选) 角度差异代价
+        Estimate the cost from the current state to the goal.
         """
-        # 1. 距离代价 (Euclidean Distance)
         dist_cost = math.hypot(x1 - x2, y1 - y2)
         
-        # 2. 角度代价 (Angular Difference)
         angle_cost = 0.0
         if use_angle_heuristic:
-            # 计算最小旋转角度 (0 ~ 180)
             diff = abs(angle1 - angle2)
             diff = min(diff, 360 - diff)
             
-            # 这里的系数需要权衡：
-            # 如果系数太大，A*会拼命想转到目标角度，甚至在原地打转
-            # 如果系数太小，接近终点时可能会忽略调整角度
-            # 建议：角度代价应该比移动一格的代价小一点，鼓励边走边转
-            angle_cost = (diff / 180.0) * 5.0 # 假设180度偏差等同于5米距离
+            angle_cost = (diff / 180.0) * 5.0  # 180 deg is weighted as 5 m.
             
         return dist_cost + angle_cost
 
@@ -236,16 +228,14 @@ class PathSearch:
 
     def _plan_with_asymmetric_astar(self, start: Union[np.ndarray, List], goal: Union[np.ndarray, List]) -> Tuple[List[Tuple[int, int]], int]:
         """
-        SE(2) A* 搜索，支持 Start/Goal Yaw 约束。
+        Run SE(2) A* with optional goal yaw constraints.
         """
         start_gx, start_gy = self.world_to_grid(start[0], start[1])
         goal_gx, goal_gy = self.world_to_grid(goal[0], goal[1])
         
-        # 1. 解析 Start Yaw (严格使用)
         start_theta = start[2] if len(start) > 2 else 0.0
         start_angle_idx = int(np.round(np.degrees(start_theta) / self.angle_resolution)) * self.angle_resolution % 360
 
-        # 2. 解析 Goal Yaw (如果输入包含)
         use_goal_yaw = (len(goal) > 2)
         goal_angle_idx = 0
         if use_goal_yaw:
@@ -281,7 +271,6 @@ class PathSearch:
             runs += 1
             _, current_cost, cx, cy, c_angle = heapq.heappop(open_list)
             
-            # --- 3. 改进的终止条件 (Goal Check) ---
             dist_to_goal = abs(cx - goal_gx) + abs(cy - goal_gy) # Manhattan check is faster
             
             if dist_to_goal == 0:
@@ -334,9 +323,6 @@ class PathSearch:
         path = []
         curr = final_state
         while curr is not None:
-            # 返回: (x, y, theta_deg)
-            # 之前只返回了 (x, y)，现在为了方便调试把 theta 也加上
-            # 注意：path_to_world_coords 可能需要微调来接收 3 元素元组
             path.append((curr[0], curr[1], curr[2])) 
             curr = came_from[curr]
         return path[::-1], runs
@@ -350,8 +336,6 @@ class PathSearch:
         if not grid_path:
             return []
         
-        # 1. 提取关键点 (Keyframes)
-        # 将 grid index 转换为 world metric coordinates
         keyframes = []
         for i, pt in enumerate(grid_path):
             gx, gy, gth_idx = pt
@@ -369,11 +353,8 @@ class PathSearch:
             
             keyframes.append((wx, wy, yaw_rad))
             
-        # 2. 对关键点进行插值 (Densify)
-        # 我们不仅要插值 x, y，还要插值 yaw
         dense_path = self._densify_path_with_yaw(keyframes, interval)
         
-        # 3. 转换为输出格式 List[np.array]
         world_path = []
         for pt in dense_path:
             # pt is (x, y, yaw)
@@ -397,39 +378,30 @@ class PathSearch:
             x1, y1, th1 = keyframes[i]
             x2, y2, th2 = keyframes[i + 1]
             
-            # 添加起点
             dense_points.append((x1, y1, th1))
             
             dist = math.hypot(x2 - x1, y2 - y1)
             
-            # 计算角度差（处理 -PI 到 PI 的跳变）
+            # Wrap yaw to the shortest turn.
             yaw_diff = th2 - th1
             while yaw_diff > np.pi: yaw_diff -= 2 * np.pi
             while yaw_diff < -np.pi: yaw_diff += 2 * np.pi
             
-            # 如果距离太远，或者角度变化大（即使原地旋转距离为0），都进行插值
-            # 这里我们简单地基于距离插值，如果主要是原地旋转，dist会很小，
-            # 可能需要额外的逻辑来保证旋转过程也有足够的密度。
-            
-            # 策略：取距离步数和角度步数的最大值，保证平滑
             dist_steps = int(np.ceil(dist / interval))
-            angle_steps = int(np.ceil(abs(yaw_diff) / 0.1)) # 每 0.1弧度(约5.7度) 插一个点
+            angle_steps = int(np.ceil(abs(yaw_diff) / 0.1))
             n_insert = max(dist_steps, angle_steps)
             
             if n_insert > 1:
                 for j in range(1, n_insert):
                     t = j / n_insert
                     
-                    # 位置线性插值
                     x = x1 + t * (x2 - x1)
                     y = y1 + t * (y2 - y1)
                     
-                    # 角度线性插值
                     th = th1 + t * yaw_diff
                     
                     dense_points.append((x, y, th))
         
-        # 添加最后一个点
         dense_points.append(keyframes[-1])
         
         return dense_points
@@ -439,23 +411,20 @@ if __name__ == "__main__":
     w, h = 50, 50
     matrix = np.ones((h, w), dtype=np.int8) 
     
-    # 场景：左下角有一个窄通道，要求车必须横着进去
-    matrix[10:40, 20] = 0 # 墙
-    matrix[10:40, 24] = 0 # 墙，形成 21,22,23 三列宽的通道
+    # Narrow corridor fixture.
+    matrix[10:40, 20] = 0
+    matrix[10:40, 24] = 0
     
     grid = Grid(width=w, height=h, matrix=matrix)
     
-    # 一个长条形的机器人 (2m x 0.5m)
+    # Long rectangular robot.
     robot_parts = [[[1.0, 0.25], [-1.0, 0.25], [-1.0, -0.25], [1.0, -0.25]]]
     
     searcher = PathSearch(grid, resolution=0.2, curve_style="asymmetric_astar", vehicle_polygons=robot_parts)
     
     # Case 1: Start Horizontal (0 deg), Goal Inside Corridor Horizontal (0 deg)
-    # 起点: (5, 5, 0度) -> 终点: (22, 25, 90度)
-    # 这要求机器人必须在进入通道前或者在通道里旋转 (通道很窄，只能在外面转好)
-    
     start = [5.0, 5.0, 0.0]  
-    goal = [4.4, 6.0, np.radians(90)] # 目标是竖着停
+    goal = [4.4, 6.0, np.radians(90)]
     
     print(f"Planning with Goal Yaw Constraint...")
     path, runs = searcher.find_initial_path(start, goal)

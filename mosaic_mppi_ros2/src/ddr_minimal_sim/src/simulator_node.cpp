@@ -142,7 +142,7 @@ void MinimalSimulator::validateParameters() {
     throw std::runtime_error("Invalid wheel parameters");
   }
 
-  // Validate dynamics constraints (防止负值和零值)
+  // Validate dynamics constraints.
   if (dynamics_.max_linear_velocity <= 0.0 ||
       dynamics_.max_lateral_velocity <= 0.0 ||
       dynamics_.max_angular_velocity <= 0.0) {
@@ -164,7 +164,7 @@ void MinimalSimulator::validateParameters() {
     throw std::runtime_error("Invalid dynamics: max accelerations must be positive");
   }
 
-  // Validate simulation frequencies (防止除零)
+  // Validate simulation frequencies.
   if (simulation_.frequency <= 0.0 || simulation_.frequency > 1000.0) {
     RCLCPP_ERROR(this->get_logger(),
                  "Update frequency must be in range (0, 1000] Hz, got %.3f Hz",
@@ -178,7 +178,7 @@ void MinimalSimulator::validateParameters() {
     throw std::runtime_error("Invalid publish_rate parameter");
   }
 
-  // Validate noise parameters (防止负值)
+  // Validate noise parameters.
   if (simulation_.noise_std_v < 0.0 ||
       simulation_.noise_std_vy < 0.0 ||
       simulation_.noise_std_omega < 0.0) {

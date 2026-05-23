@@ -138,8 +138,6 @@ class ReferencePath:
             if grid_path and len(grid_path) > 0:
                 print(f"✓ A* path found: {len(grid_path)} grid points, {runs} iterations")
                 
-                # [修改点] 移除 start_yaw 和 goal_yaw 参数
-                # 直接传入 interval (建议使用 self.interval 保持一致)
                 self.initial_path = self.path_searcher.path_to_world_coords(
                     grid_path, 
                     interval=self.interval 
