@@ -82,13 +82,13 @@ EXACT-MPPI has been deployed on three hardware platforms without hardware-specif
   </tr>
   <tr>
     <td align="center">
-      <video src="videos/Deployment%20on%20a%20different%20drive%20robot.mp4" width="100%" controls></video>
+      <video src="https://github.com/user-attachments/assets/60513fe5-9388-4718-be83-48ee510ae98c" width="100%" controls></video>
     </td>
     <td align="center">
-      <video src="videos/Deployment%20on%20a%20swerve%20control%20robot.mp4" width="100%" controls></video>
+      <video src="https://github.com/user-attachments/assets/8300cdb7-86d7-48e7-a77c-482bb2e17e55" width="100%" controls></video>
     </td>
     <td align="center">
-      <video src="videos/Deployment%20on%20a%20quadrupedal%20robot.mp4" width="100%" controls></video>
+      <video src="https://github.com/user-attachments/assets/80982db2-d9c7-454a-9023-6f732b195ab2" width="100%" controls></video>
     </td>
   </tr>
 </table>
