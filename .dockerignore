@@ -8,11 +8,9 @@ __pycache__/
 .venv/
 venv/
 env/
-
 build/
 install/
 log/
-
 runs/
 outputs/
 wandb/
