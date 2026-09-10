@@ -109,6 +109,7 @@ WALL_Y_MARGIN = 0.35
 MIN_DYNAMIC_OBSTACLE_SPEED = 0.1
 MAX_DYNAMIC_OBSTACLE_SPEED = 0.2
 POLYGON_SHAPE_MODES = ("convex", "concave", "mixed")
+RANDOM_OBSTACLE_SHAPES = ("circle", "rectangle", "polygon")
 IGNORED_OUTPUT_DIR = "ignored"
 
 
@@ -517,8 +518,18 @@ def _assign_initial_bounce_velocity(
 
 def _make_bounce_goal(position: np.ndarray, velocity_xy: np.ndarray) -> list[float]:
     vx, vy = float(velocity_xy[0]), float(velocity_xy[1])
-    x_target = CORRIDOR_BOUNDS["x_max"] if vx >= 0.0 else CORRIDOR_BOUNDS["x_min"]
-    y_target = CORRIDOR_BOUNDS["y_max"] if vy >= 0.0 else CORRIDOR_BOUNDS["y_min"]
+    # Preserve an axis when its velocity is zero so a prescribed traffic
+    # direction is not changed by an unintended goal at the far corridor wall.
+    x_target = (
+        float(position[0])
+        if abs(vx) <= 1.0e-6
+        else (CORRIDOR_BOUNDS["x_max"] if vx > 0.0 else CORRIDOR_BOUNDS["x_min"])
+    )
+    y_target = (
+        float(position[1])
+        if abs(vy) <= 1.0e-6
+        else (CORRIDOR_BOUNDS["y_max"] if vy > 0.0 else CORRIDOR_BOUNDS["y_min"])
+    )
     return [x_target, y_target, float(np.arctan2(vy, vx))]
 
 
@@ -563,8 +574,14 @@ def update_dynamic_obstacles(env, obstacle_states: list[dict], static_offset: in
             bounced = True
 
         if bounced:
-            obs.set_goal(_make_bounce_goal(obs.state[:2, 0], vel))
-            obs.set_velocity(vel)
+            velocity_xy = _assign_initial_bounce_velocity(
+                state["motion_rng"],
+                x_sign=float(np.sign(vel[0])),
+                y_sign=float(np.sign(vel[1])),
+            )
+            state["velocity_xy"] = velocity_xy
+            obs.set_goal(_make_bounce_goal(obs.state[:2, 0], velocity_xy))
+            obs.set_velocity(velocity_xy)
 
     # inter-obstacle collisions: simple elastic-like response by swapping velocities
     n = len(obs_list)
@@ -741,11 +758,9 @@ def build_dynamic_obstacles(
     roam_high = [54.0, 23.8, np.pi]
     obstacle_entries = []
     obstacle_states = []
-    # shape_types = ["circle", "rectangle", "polygon"]
-    shape_types = ["polygon"]
 
     for _ in range(num_dynamic_obstacles):
-        shape_type = str(rng.choice(shape_types))
+        shape_type = str(rng.choice(RANDOM_OBSTACLE_SHAPES))
         pose = _sample_obstacle_pose(
             rng,
             x_range=(roam_low[0], roam_high[0]),
@@ -779,6 +794,7 @@ def build_dynamic_obstacles(
                 "shape_type": shape_type,
                 "half_extents": np.array(half_extents, dtype=np.float32),
                 "velocity_xy": velocity_xy,
+                "motion_rng": rng,
             }
         )
 
