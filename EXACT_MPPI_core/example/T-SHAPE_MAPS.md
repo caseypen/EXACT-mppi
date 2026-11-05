@@ -16,7 +16,7 @@ From the repository root, choose a map and pass any run options in one command:
 
 | Map | Example | PNG preview |
 |---|---|---|
-| 1 | [map1_tshape](./map1_tshape/) | [preview](./map1_tshape/map1_tshape_figure.png) |
+| 1 | [map1_tshape](./map1_tshape/) | [F-shape preview](./map1_tshape/map1_fshape_figure.png) |
 | 2 | [map2_tshape](./map2_tshape/) | [preview](./map2_tshape/map2_tshape_figure.png) |
 | 3 | [map3_tshape](./map3_tshape/) | [preview](./map3_tshape/map3_tshape_preview.png) |
 | 4 | [map4_tshape](./map4_tshape/) | [preview](./map4_tshape/map4_tshape_figure.png) |
