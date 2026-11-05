@@ -29,6 +29,31 @@ def _wrap_to_pi(a: np.ndarray) -> np.ndarray:
     return (a + np.pi) % (2.0 * np.pi) - np.pi
 
 
+def _simulator_velocity_to_mppi_speed(robot, simulator_velocity: np.ndarray) -> np.ndarray:
+    """Map the simulator's measured body velocity to MPPI's [vx, vy, wz].
+
+    IR-SIM returns [vx, yaw_rate] for both differential and Ackermann robots.
+    In Ackermann steer mode, get_robot_velocity() derives yaw_rate from the
+    applied steering state, so its second element is not the steering angle.
+    """
+    velocity = np.asarray(simulator_velocity, dtype=np.float32).reshape(-1)
+    kinematics = str(getattr(robot, "kinematics", "")).lower()
+
+    if kinematics in ("diff", "acker"):
+        if velocity.size != 2:
+            raise ValueError(
+                f"IR-SIM {kinematics} velocity must be [vx, yaw_rate], got shape {velocity.shape}"
+            )
+        return np.array([velocity[0], 0.0, velocity[1]], dtype=np.float32)
+
+    if velocity.size == 3:
+        return velocity
+    if velocity.size == 2:
+        # Preserve the existing convention for other nonholonomic examples.
+        return np.array([velocity[0], 0.0, velocity[1]], dtype=np.float32)
+    raise ValueError(f"Unsupported simulator velocity shape for MPPI: {velocity.shape}")
+
+
 def transfer_from_global_to_local_frame(
     points: np.ndarray, pose: np.ndarray
 ) -> np.ndarray:
@@ -109,7 +134,10 @@ def _compute_furthest_reached_path_index(
 
 
 def _collect_cost_reference_points(
-    local_plan: np.ndarray, local_rollouts: np.ndarray, planner_cfg: dict
+    local_plan: np.ndarray,
+    local_rollouts: np.ndarray,
+    planner_cfg: dict,
+    final_goal_local: np.ndarray,
 ) -> np.ndarray | None:
     furthest_idx = _compute_furthest_reached_path_index(local_plan, local_rollouts)
     if furthest_idx is None:
@@ -130,26 +158,18 @@ def _collect_cost_reference_points(
     def offset_from_furthest(name: str) -> int:
         return int(critics_cfg.get(name, {}).get("offset_from_furthest", 0))
 
-    idxs = [furthest_idx]
-
-    if critic_enabled("PathFollowCritic", True):
-        idxs.append(furthest_idx + offset_from_furthest("PathFollowCritic"))
-
-    if critic_enabled("PathAngleCritic", True):
-        idxs.append(furthest_idx + offset_from_furthest("PathAngleCritic"))
-
     if critic_enabled("GoalCritic", True) or critic_enabled("GoalAngleCritic", True):
-        idxs.append(max_idx)
+        goal = np.asarray(final_goal_local).reshape(-1)
+        if goal.size >= 2:
+            return goal[None, :2]
 
-    clamped = []
-    seen = set()
-    for idx in idxs:
-        idx = max(0, min(int(idx), max_idx))
-        if idx not in seen:
-            clamped.append(idx)
-            seen.add(idx)
-
-    return path_xy[clamped]
+    idx = furthest_idx
+    if critic_enabled("PathFollowCritic", True):
+        follow_cfg = critics_cfg.get("PathFollowCritic", {})
+        base_idx = furthest_idx if follow_cfg.get("use_furthest_reached", True) else 0
+        idx = base_idx + offset_from_furthest("PathFollowCritic")
+    idx = max(0, min(int(idx), max_idx))
+    return path_xy[idx:idx + 1]
 
 def _path_list_to_array(path_list: list[np.ndarray]) -> np.ndarray | None:
     if not path_list:
@@ -222,18 +242,51 @@ def _select_local_plan(
     pad = np.repeat(last[None, :], pad_count, axis=0)
     return np.vstack([global_path[nearest_idx:], pad])
 
-def _summarize_cost_breakdown(cost_breakdown: dict, top_n: int = 6) -> str:
+def _summarize_cost_breakdown(
+    cost_breakdown: dict,
+    total_costs: np.ndarray | None = None,
+    temperature: float = 0.3,
+    top_n: int = 8,
+) -> str:
+    """Summarize per-rollout critic arrays, including their MPPI-weighted means."""
     if not cost_breakdown:
         return ""
-    total = cost_breakdown.get("total")
-    items = [(k, v) for k, v in cost_breakdown.items() if k != "total"]
-    items.sort(key=lambda kv: abs(kv[1]), reverse=True)
+
+    weights = None
+    if total_costs is not None:
+        total_array = np.asarray(total_costs, dtype=float).reshape(-1)
+        if total_array.size:
+            finite = np.isfinite(total_array)
+            if finite.any():
+                shifted = total_array[finite] - np.min(total_array[finite])
+                logits = -shifted / max(float(temperature), 1e-8)
+                probs = np.exp(logits - np.max(logits))
+                weights = np.zeros_like(total_array)
+                weights[finite] = probs / probs.sum()
+
+    items = []
+    for name, values in cost_breakdown.items():
+        if values is None:
+            continue
+        array = np.asarray(values, dtype=float).reshape(-1)
+        finite = np.isfinite(array)
+        if not finite.any():
+            continue
+        array = array[finite]
+        weighted_mean = float("nan")
+        if weights is not None and weights.size == finite.size:
+            valid_weights = weights[finite]
+            if valid_weights.sum() > 0:
+                weighted_mean = float(np.sum(array * valid_weights) / valid_weights.sum())
+        items.append((name, weighted_mean, float(np.mean(array)), float(np.max(array))))
+
+    items.sort(key=lambda item: item[1] if np.isfinite(item[1]) else item[2], reverse=True)
     if top_n is not None:
         items = items[:top_n]
-    parts = [f"{k}={v:.3f}" for k, v in items]
-    if total is not None:
-        parts.append(f"total={total:.3f}")
-    return ", ".join(parts)
+    return ", ".join(
+        f"{name}[weighted={weighted:.3g}, mean={mean:.3g}, max={maximum:.3g}]"
+        for name, weighted, mean, maximum in items
+    )
 
 
 def calculate_don(narrow_gap_distance: float, robot_width: float = 2.4) -> float:
@@ -422,6 +475,38 @@ def scan_to_points(
 
     return global_points, local_points
 
+
+def scan_to_local_point_velocities(
+    scan: dict, robot_yaw: float, angle_range: list[float] = [-np.pi, np.pi]
+) -> np.ndarray | None:
+    """Return velocities for the same valid LiDAR beams as ``scan_to_points``.
+
+    IR-SIM reports beam velocities in world coordinates. MPPI's point-flow
+    checks use the robot's initial local frame, so rotate each velocity by
+    the inverse robot yaw (without applying a translation).
+    """
+    if "velocity" not in scan or scan["velocity"] is None:
+        return None
+
+    ranges = np.asarray(scan["ranges"])
+    angles = np.linspace(scan["angle_min"], scan["angle_max"], len(ranges))
+    valid = (
+        (ranges < scan["range_max"] - 0.02)
+        & (ranges > scan["range_min"])
+        & (angles > angle_range[0])
+        & (angles < angle_range[1])
+    )
+    velocities = np.asarray(scan["velocity"], dtype=np.float32)
+    if velocities.shape != (2, len(ranges)):
+        raise ValueError(
+            f"Expected LiDAR velocities with shape (2, {len(ranges)}), got {velocities.shape}"
+        )
+
+    selected = velocities[:, valid].T
+    c, s = np.cos(robot_yaw), np.sin(robot_yaw)
+    world_to_local = np.array([[c, s], [-s, c]], dtype=np.float32)
+    return selected @ world_to_local.T
+
 def build_stack(planner_cfg):
     # MPPI controller
     mppi_optimizer = MPPIController(
@@ -472,6 +557,9 @@ def main(
     show_local_plan_vis = vis_cfg.get("show_local_plan", True)
     show_optimal_traj = vis_cfg.get("show_optimal_trajectory", False)
     show_cost_points_vis = vis_cfg.get("show_cost_points", True)
+    show_only_track_point = vis_cfg.get("show_only_track_point", False)
+    show_robot_position = vis_cfg.get("show_robot_position", False)
+    optimal_trajectory_alpha = float(vis_cfg.get("optimal_trajectory_alpha", 1.0))
     show_lidar_vis = vis_cfg.get("show_lidar", True)
     # Command-line show_rollouts overrides config
     show_rollouts_vis = show_rollouts or vis_cfg.get("show_rollouts", False)
@@ -482,7 +570,9 @@ def main(
         if reference_path is not None
         else np.linspace(start_state[:3], goal_state[:3], 120)
     )
-    local_plan_length = 30
+    local_plan_length = int(
+        planner_cfg.get("reference_path", {}).get("local_plan_length", 30)
+    )
     
     print(f"Robot width: 2.4m")
     print()
@@ -510,6 +600,9 @@ def main(
         # Properly extract scalar values to avoid deprecation warnings
         robot_state_scalar = [float(robot_state[i]) if np.isscalar(robot_state[i]) else float(robot_state[i].item() if hasattr(robot_state[i], 'item') else robot_state[i]) for i in range(3)]
         position_history.append(robot_state_scalar)
+        # Use the velocity measured by IR-SIM at this control step. MPPI's
+        # closed-loop initialization and acceleration constraints start from
+        # this measured body twist rather than the previous requested command.
         robot_vel = env.get_robot_velocity()
         lidar_scan = env.get_lidar_scan()
 
@@ -521,8 +614,7 @@ def main(
             min_distance_to_obstacles = min(min_distance_to_obstacles, min_dist_current)
         
         robot_pose = robot_state[:3].reshape(-1)
-        robot_speed = robot_vel.reshape(-1) # TODO: only works for diff now due to ir_sim implementation
-        robot_speed = np.array([robot_speed[0], 0.0, robot_speed[1]])   
+        robot_speed = _simulator_velocity_to_mppi_speed(env.robot, robot_vel)
 
         global_plan = _select_local_plan(reference_path, robot_pose, local_plan_length)
         if global_plan is None:
@@ -530,6 +622,11 @@ def main(
         local_plan = transfer_from_global_to_local_frame(global_plan, robot_pose)
         local_goal = transfer_from_global_to_local_frame(goal_state[:3].reshape(-1), robot_pose)
         lidar_points = None if local_lidar_points is None else local_lidar_points.T
+        lidar_velocities = None
+        if planner_cfg.get("lidar_point_velocities", False) and lidar_points is not None:
+            lidar_velocities = scan_to_local_point_velocities(
+                lidar_scan, float(robot_pose[2])
+            )
 
         t_start = time.perf_counter()
         action = mppi.computeVelocityCommands(
@@ -538,16 +635,26 @@ def main(
             plan=local_plan,
             goal=local_goal,
             lidar_points=lidar_points,
+            lidar_velocities=lidar_velocities,
             )
         t_elapsed = time.perf_counter() - t_start
         print(f"MPPI execution time: {t_elapsed*1000:.2f} ms")
 
         if print_costs and (step_idx % max(cost_interval, 1) == 0):
-            breakdown = mppi.getCostBreakdown()
-            if breakdown:
-                summary = _summarize_cost_breakdown(breakdown)
-                if summary:
-                    print(f"Cost breakdown @ step {step_idx}: {summary}")
+            breakdown = mppi.getCostsDebug()
+            summary = _summarize_cost_breakdown(
+                breakdown,
+                mppi.getCosts(),
+                float(planner_cfg["MPPI"].get("temperature", 0.3)),
+            )
+            if summary:
+                follow_point = mppi.getPathFollowPoint()
+                follow_text = ""
+                if follow_point is not None:
+                    point = np.asarray(follow_point).reshape(-1)
+                    if point.size >= 2 and np.isfinite(point[:2]).all():
+                        follow_text = f", follow_point_local=({point[0]:.2f}, {point[1]:.2f})"
+                print(f"Critic costs @ step {step_idx}{follow_text}: {summary}")
 
         # Get trajectories for visualization
         opt_trajectory = mppi.getOptimalTrajectory()  # Optimal trajectory (best rollout)
@@ -569,14 +676,34 @@ def main(
 
         # Draw cost reference points (from active critics) in magenta
         if show_cost_points_vis:
-            cost_points_local = _collect_cost_reference_points(
-                local_plan, all_traj_rollouts, planner_cfg
-            )
-            if cost_points_local is not None and cost_points_local.size > 0:
-                cost_points_global = transfer_from_local_to_global_frame(
-                    cost_points_local, robot_pose
+            if not show_only_track_point:
+                cost_points_local = _collect_cost_reference_points(
+                    local_plan, all_traj_rollouts, planner_cfg, local_goal
                 )
-                env.draw_points(cost_points_global.T, s=45, c="m", refresh=True)
+                if cost_points_local is not None and cost_points_local.size > 0:
+                    cost_points_global = transfer_from_local_to_global_frame(
+                        cost_points_local, robot_pose
+                    )
+                    env.draw_points(cost_points_global.T, s=45, c="m", refresh=True)
+
+            # Show the exact target selected by PathFollowCritic.
+            selected_follow_point = mppi.getPathFollowPoint()
+            if selected_follow_point is not None:
+                follow_point = np.asarray(selected_follow_point).reshape(-1)
+                if follow_point.size >= 2 and np.isfinite(follow_point[:2]).all():
+                    follow_point_global = transfer_from_local_to_global_frame(
+                        follow_point[:2].reshape(1, 2), robot_pose
+                    )
+                    env.draw_points(
+                        follow_point_global.T,
+                        s=110,
+                        c="#00bcd4",
+                        marker="D",
+                        edgecolors="#202020",
+                        linewidths=0.8,
+                        refresh=True,
+                        zorder=24,
+                    )
         
         # Draw all rollouts in light cyan (background)
         if show_rollouts_vis and all_traj_rollouts is not None:
@@ -587,7 +714,25 @@ def main(
         # Draw optimal trajectory in red (like neupan)
         if show_optimal_traj and opt_trajectory is not None:
             opt_trajectory = transfer_from_local_to_global_frame(opt_trajectory, robot_pose)
-            env.draw_trajectory(opt_trajectory.T, "r", linewidth=2, refresh=True)
+            env.draw_trajectory(
+                opt_trajectory.T,
+                "r",
+                linewidth=2,
+                alpha=optimal_trajectory_alpha,
+                refresh=True,
+            )
+
+        if show_robot_position:
+            env.draw_points(
+                robot_pose[:2].reshape(1, 2).T,
+                s=150,
+                c="#ffe600",
+                marker="o",
+                edgecolors="#151515",
+                linewidths=1.5,
+                refresh=True,
+                zorder=30,
+            )
 
         cmd = action.reshape(-1).astype(np.float32)
         

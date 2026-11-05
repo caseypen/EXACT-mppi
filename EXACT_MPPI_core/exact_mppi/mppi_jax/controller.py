@@ -43,12 +43,12 @@ class MPPIController:
         plan: ArrayLike,
         goal: ArrayLike,
         lidar_points: Optional[np.ndarray],
+        lidar_velocities: Optional[np.ndarray] = None,
     ) -> np.ndarray:
 
-        obs_points, obs_points_mask = self._pack_lidar_points(
-            lidar_points, self.max_obs_num_
+        obs_points, obs_velocities, obs_points_mask = self._pack_lidar_points(
+            lidar_points, lidar_velocities, self.max_obs_num_
         )
-
         try:
             cmd, self.optimal_trajectory_ = self.optimizer_.evalControl(
                 robot_pose=self._to_jnp(robot_pose),
@@ -56,6 +56,7 @@ class MPPIController:
                 plan=self._to_jnp(plan),
                 goal=self._to_jnp(goal),
                 obs_points=self._to_jnp(obs_points),
+                obs_velocities=self._to_jnp(obs_velocities),
                 obs_points_mask=self._to_jnp(obs_points_mask),
                 footprint=self.footprint_,
             )
@@ -161,38 +162,51 @@ class MPPIController:
 
     @staticmethod
     def _pack_lidar_points(
-        lidar_points: Optional[np.ndarray], Nmax: int = 100, dtype=jnp.float32
-    ) -> Tuple[jax.Array, jax.Array]:
+        lidar_points: Optional[np.ndarray], lidar_velocities: Optional[np.ndarray] = None,
+        Nmax: int = 100, dtype=jnp.float32
+    ) -> Tuple[jax.Array, jax.Array, jax.Array]:
         if lidar_points is None:
             obs_points = jnp.zeros((Nmax, 2), dtype=dtype)
+            obs_velocities = jnp.zeros((Nmax, 2), dtype=dtype)
             obs_mask = jnp.zeros((Nmax,), dtype=dtype)
-            return obs_points, obs_mask
+            return obs_points, obs_velocities, obs_mask
 
         points = np.asarray(lidar_points, dtype=np.float32)
         if points.size == 0:
             obs_points = jnp.zeros((Nmax, 2), dtype=dtype)
+            obs_velocities = jnp.zeros((Nmax, 2), dtype=dtype)
             obs_points_mask = jnp.zeros((Nmax,), dtype=dtype)
-            return obs_points, obs_points_mask
+            return obs_points, obs_velocities, obs_points_mask
 
         points = points.reshape((-1, 2))
+        velocities = np.zeros_like(points)
+        if lidar_velocities is not None:
+            candidate = np.asarray(lidar_velocities, dtype=np.float32)
+            if candidate.size == points.size:
+                candidate = candidate.reshape((-1, 2))
+                velocities = np.where(np.isfinite(candidate), candidate, 0.0)
         N = points.shape[0]
 
         if N > Nmax:
             r2 = np.einsum("ij,ij->i", points, points)
             idx = np.argpartition(r2, Nmax - 1)[:Nmax]
             points = points[idx]
+            velocities = velocities[idx]
             N = Nmax
 
         obs_points = np.zeros((Nmax, 2), dtype=np.float32)
         obs_points[:N] = points
+        obs_velocities = np.zeros((Nmax, 2), dtype=np.float32)
+        obs_velocities[:N] = velocities
 
         obs_points_mask = np.zeros((Nmax,), dtype=np.float32)
         obs_points_mask[:N] = 1.0
 
         obs_points = jnp.asarray(obs_points, dtype=dtype)
+        obs_velocities = jnp.asarray(obs_velocities, dtype=dtype)
         obs_points_mask = jnp.asarray(obs_points_mask, dtype=dtype)
 
-        return obs_points, obs_points_mask
+        return obs_points, obs_velocities, obs_points_mask
 
     @staticmethod
     def _to_jnp(x, dtype=jnp.float32) -> jax.Array:

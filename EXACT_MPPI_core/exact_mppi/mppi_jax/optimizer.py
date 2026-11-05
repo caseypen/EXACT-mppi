@@ -92,10 +92,15 @@ class Optimizer:
         self.critic_manager_ = CriticManager(critic_params, constraints, self.debug_)
 
         trajectory_validator_params = kwargs.get("TrajectoryValidator", {})
+        obstacle_critic_params = critic_params.get("ObstaclesCritic", {})
+        point_flow_distance_enabled = "collision_substeps" in obstacle_critic_params
         self.trajectory_validator_ = OptimalTrajectoryValidator(
             self.settings_,
             trajectory_validator_params.get("collision_lookahead_time", 2.0),
             trajectory_validator_params.get("collision_margin_distance", 0.1),
+            point_flow_distance_enabled=point_flow_distance_enabled,
+            collision_substeps=int(obstacle_critic_params.get("collision_substeps", 1)),
+            point_chunk_size=int(obstacle_critic_params.get("point_chunk_size", 32)),
         )
 
         self.reset(seed)
@@ -134,15 +139,23 @@ class Optimizer:
         plan: ArrayLike,
         goal: ArrayLike,
         obs_points: jax.Array,
+        obs_velocities: Optional[jax.Array],
         obs_points_mask: jax.Array,
         footprint: ControlConstraints,  # Should use proper type hint, likely Any
     ) -> Tuple[jax.Array, jax.Array]:
+        # Normalize point velocities before calling the jitted numerical path.
+        if obs_velocities is None:
+            obs_velocities = jnp.zeros_like(obs_points)
+        else:
+            obs_velocities = jnp.asarray(obs_velocities)
+
         critics_data = self.prepare(
             robot_pose,
             robot_speed,
             plan,
             goal,
             obs_points,
+            obs_velocities,
             obs_points_mask,
             footprint,
             self.last_command_vel_,
@@ -169,6 +182,10 @@ class Optimizer:
                 obs_points,
                 obs_points_mask,
                 footprint,
+                obs_velocities=obs_velocities,
+                interval_vx=self.control_sequence_.vx,
+                interval_wz=self.control_sequence_.wz,
+                initial_pose=jnp.asarray(robot_pose).reshape(-1),
             )
 
             if validation_result == ValidationResult.SOFT_RESET:
@@ -348,6 +365,7 @@ class Optimizer:
         plan: jax.Array,
         goal: jax.Array,
         obs_points: jax.Array,
+        obs_velocities: Optional[jax.Array],
         obs_points_mask: jax.Array,
         footprint: jax.Array, # Actually Union[Rectangles, Polygons]
         last_command_vel: jax.Array,
@@ -364,6 +382,10 @@ class Optimizer:
         state = replace(
             state, pose=pose, speed=speed, local_path_length=local_path_length
         )
+        if obs_velocities is None:
+            obs_velocities = jnp.zeros_like(obs_points)
+        else:
+            obs_velocities = jnp.asarray(obs_velocities)
 
         critics_data = CriticData(
             state=state,
@@ -381,6 +403,7 @@ class Optimizer:
             furthest_reached_path_point=0,
             path_pts_valid=jnp.ones(path_array.shape[0] - 1, dtype=jnp.bool_),
             obs_points=obs_points,
+            obs_velocities=obs_velocities,
             obs_points_mask=obs_points_mask,
             footprint=footprint,
         )

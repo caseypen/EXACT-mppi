@@ -10,6 +10,7 @@ from ..tools.signed_distance import (
     minimum_signed_distance_from_trajs_to_obs_points,
 )
 import exact_mppi.mppi_jax.tools.signed_distance_polygon as poly_sdf
+from ..tools.point_flow_distance import minimum_signed_distance_from_point_flow
 
 """
 Critic objective function for avoiding obstacles, allowing it to deviate off the planned path.
@@ -49,6 +50,9 @@ def obstacles_critic_initialize(
 def obstacles_critic_score(
     data: CriticData,
     params: ObstaclesCriticParams,
+    point_flow_distance_enabled: bool = False,
+    collision_substeps: int = 1,
+    point_chunk_size: int = 32,
 ) -> Tuple[jax.Array, bool]:
     """Evaluate cost related to obstacle avoidance"""
 
@@ -58,8 +62,32 @@ def obstacles_critic_score(
     def do_score(_):
         near_goal = data.state.local_path_length < params.near_goal_distance
 
-        # Minimum signed distance
-        if isinstance(data.footprint, Rectangles):
+        # The experiment's point-flow path uses the same footprint SDFs, but
+        # evaluates them at collision-only internal samples. Other examples
+        # retain their exact existing static-point implementation.
+        # This static setting is captured by CriticManager. Point-flow-disabled
+        # experiment runs still enter this branch with zero point velocities,
+        # so static and dynamic points use the same JIT kernel.
+        if point_flow_distance_enabled:
+            if isinstance(data.footprint, Rectangles):
+                dist_to_obj = minimum_signed_distance_from_point_flow(
+                    data.trajectories.x, data.trajectories.y, data.trajectories.yaws,
+                    data.state.vx, data.state.wz, data.state.pose,
+                    data.obs_points, data.obs_velocities, data.obs_points_mask,
+                    data.model_dt, collision_substeps, point_chunk_size,
+                    rect_centers=data.footprint.centers, rect_halfs=data.footprint.halfs,
+                )
+            elif isinstance(data.footprint, Polygons):
+                dist_to_obj = minimum_signed_distance_from_point_flow(
+                    data.trajectories.x, data.trajectories.y, data.trajectories.yaws,
+                    data.state.vx, data.state.wz, data.state.pose,
+                    data.obs_points, data.obs_velocities, data.obs_points_mask,
+                    data.model_dt, collision_substeps, point_chunk_size,
+                    vertices=data.footprint.vertices, vertex_counts=data.footprint.vertex_counts,
+                )
+            else:
+                raise TypeError(f"Unknown footprint type: {type(data.footprint)}")
+        elif isinstance(data.footprint, Rectangles):
             dist_to_obj = minimum_signed_distance_from_trajs_to_obs_points(
                 data.trajectories.x,
                 data.trajectories.y,

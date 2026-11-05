@@ -1,0 +1,164 @@
+MPPI:
+  motion_model: acker
+  AckermannConstraints:
+    min_turning_r: 0.5
+  model_dt: 0.1
+  time_steps: 30
+  batch_size: 1000
+  iteration_count: 1
+  temperature: 0.3
+  gamma: 0.015
+  vx_max: 2.0
+  vx_min: -2.0
+  wz_max: 0.76
+  ax_max: 1.0
+  ax_min: -1.0
+  az_max: 1.72
+  vx_std: 0.5
+  wz_std: 0.5
+  retry_attempt_limit: 1
+  open_loop: false
+  seed: 0
+  debug: true
+  max_obs_num: 50
+  TrajectoryValidator:
+    collision_lookahead_time: 2.0
+    collision_margin_distance: 0.1
+  Critics:
+    ConstraintCritic:
+      enabled: true
+      cost_power: 1
+      cost_weight: 4.0
+    GoalCritic:
+      enabled: true
+      cost_power: 1
+      cost_weight: 5.0
+      threshold_to_consider: 2.0
+    GoalAngleCritic:
+      enabled: false
+      cost_power: 1
+      cost_weight: 10.0
+      threshold_to_consider: 2.0
+    ObstaclesCritic:
+      enabled: true
+      cost_power: 1
+      repulsion_weight: 1.5
+      critical_weight: 20.0
+      collision_cost: 100000.0
+      collision_margin_distance: 0.4
+      near_goal_distance: 0.5
+      repulsion_distance: 5.0
+      collision_substeps: 2
+      point_chunk_size: 32
+    PathAlignCritic:
+      enabled: true
+      cost_power: 1
+      cost_weight: 10.0
+      max_path_occupancy_ratio: 0.07
+      trajectory_point_step: 4
+      threshold_to_consider: 0.5
+      offset_from_furthest: 20
+      use_path_orientation: false
+    PathFollowCritic:
+      enabled: true
+      cost_power: 1
+      cost_weight: 5.0
+      offset_from_furthest: 6
+      furthest_path_lookahead_distance: 5.0
+      threshold_to_consider: 0.5
+    PathAngleCritic:
+      enabled: true
+      cost_power: 1
+      cost_weight: 2.2
+      offset_from_furthest: 4
+      threshold_to_consider: 0.5
+      max_angle_to_furthest: 0.785398
+      mode: 1
+    PreferForwardCritic:
+      enabled: false
+      cost_power: 1
+      cost_weight: 5.0
+      threshold_to_consider: 0.5
+    VelocityDeadbandCritic:
+      enabled: true
+      cost_power: 1
+      cost_weight: 35.0
+      deadband_velocities:
+      - 0.0
+      - 0.0
+      - 0.0
+    TwirlingCritic:
+      enabled: true
+      cost_power: 1
+      cost_weight: 5.0
+      pose_tolerance: 0.1
+  vertices:
+  - - - 0.9
+      - 0.3
+    - - -0.9
+      - 0.3
+    - - -0.9
+      - -0.3
+    - - 0.9
+      - -0.3
+  - - - -0.6
+      - 1.2
+    - - -0.9
+      - 1.2
+    - - -0.9
+      - -1.2
+    - - -0.6
+      - -1.2
+  mosaic_unit_vertices:
+  - - -1.0
+    - 1.0
+  - - 1.0
+    - 1.0
+  - - 1.0
+    - -1.0
+  - - -1.0
+    - -1.0
+  wheelbase: 1.6
+  min_turning_r: 2.6
+reference_path:
+  enabled: true
+  path_type: dubins
+  grid_resolution: 0.5
+  local_plan_length: 60
+  grid_inflation: 0.5
+  weight: 0.01
+ipath:
+  waypoints:
+  - - 3.2
+    - 32.4
+    - -0.57
+  - - 14.3
+    - 21.7
+    - -0.57
+  - - 17.5
+    - 16.1
+    - -0.57
+  - - 26.5
+    - 11.5
+    - -0.5
+  - - 31.6
+    - 5.9
+    - -0.98
+  waypoint_ids: [1, 5, 7, 9, 12]
+  curve_style: dubins
+  min_radius: 2.0
+  loop: false
+  arrive_threshold: 0.1
+  close_threshold: 0.1
+  ind_range: 10
+  arrive_index_threshold: 1
+  show_cursor: false
+visualization:
+  show_global_reference_line: true
+  show_local_plan: true
+  show_rollouts: false
+  show_optimal_trajectory: true
+  show_cost_points: true
+  show_robot_position: false
+  optimal_trajectory_alpha: 1.0
+  show_lidar: true

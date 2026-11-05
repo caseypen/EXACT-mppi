@@ -23,6 +23,12 @@ class CriticManager:
     ):
         self.critics_ = {}
         self.debug_ = debug
+        path_follow_params = params.get("PathFollowCritic", {})
+        self.furthest_path_lookahead_distance_ = float(
+            path_follow_params.get("furthest_path_lookahead_distance", 5.0)
+        )
+        if self.furthest_path_lookahead_distance_ <= 0.0:
+            raise ValueError("furthest_path_lookahead_distance must be positive")
 
         # Constraint Critic
         self.critics_["ConstraintCritic"] = {
@@ -91,7 +97,23 @@ class CriticManager:
             if not critic_params.enabled:
                 continue
 
-            critic["score"] = partial(critic["score"], params=critic_params)
+            if name == "ObstaclesCritic":
+                experiment_params = params.get(name, {})
+                collision_substeps = int(experiment_params.get("collision_substeps", 1))
+                if collision_substeps not in (1, 2, 4, 8):
+                    raise ValueError("collision_substeps must be one of 1, 2, 4, or 8")
+                point_chunk_size = int(experiment_params.get("point_chunk_size", 32))
+                if point_chunk_size not in (16, 32, 64):
+                    raise ValueError("point_chunk_size must be one of 16, 32, or 64")
+                critic["score"] = partial(
+                    critic["score"],
+                    params=critic_params,
+                    point_flow_distance_enabled=("collision_substeps" in experiment_params),
+                    collision_substeps=collision_substeps,
+                    point_chunk_size=point_chunk_size,
+                )
+            else:
+                critic["score"] = partial(critic["score"], params=critic_params)
             enabled_critics[name] = critic
 
         self.critics_ = enabled_critics
@@ -111,7 +133,9 @@ class CriticManager:
 
         total_costs = jnp.zeros(critics_data.trajectories.x.shape[0])  # (K,)
 
-        furthest_reached_path_point = findPathFurthestReachedPoint(critics_data)
+        furthest_reached_path_point = findPathFurthestReachedPoint(
+            critics_data, self.furthest_path_lookahead_distance_
+        )
 
         if isinstance(critics_data.footprint, Rectangles):
             dist_min = minimum_signed_distance_from_traj_to_obs_points(

@@ -40,6 +40,8 @@ htmlcov/
 # Common experiment outputs and temporary results
 **/animation/
 **/animation_buffer/
+EXACT_MPPI_core/example/map[1-6]_tshape/.animation_buffer/
+EXACT_MPPI_core/example/map[1-6]_tshape/*.gif
 **/generated_envs/
 **/hybrid_obs/
 **/hybrid_obs_quick/

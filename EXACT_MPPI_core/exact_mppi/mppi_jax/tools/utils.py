@@ -137,7 +137,9 @@ def calculate_path_length(path: jax.Array) -> jax.Array:
     return jnp.linalg.norm(path[1:] - path[:-1], axis=-1).sum()
 
 
-def findPathFurthestReachedPoint(data: CriticData) -> jax.Array:
+def findPathFurthestReachedPoint(
+    data: CriticData, max_lookahead_distance: float = 5.0
+) -> jax.Array:
     """
     Evaluate furthest point idx of data.path which is
     nearest to some trajectory in data.trajectories
@@ -155,9 +157,22 @@ def findPathFurthestReachedPoint(data: CriticData) -> jax.Array:
     path_x = data.path.x
     path_y = data.path.y
 
-    dx = path_x[None, :] - traj_x[:, None]  # (K, T)
-    dy = path_y[None, :] - traj_y[:, None]  # (K, T)
+    # The path handler supplies a pruned local path whose first point is the
+    # current path projection. Endpoints can be spatially close to a later
+    # branch on a loop or self-intersection, so only search the bounded forward
+    # arc from that projection.
+    path_step = jnp.sqrt(jnp.diff(path_x) ** 2 + jnp.diff(path_y) ** 2)
+    path_distance = jnp.concatenate(
+        [jnp.zeros((1,), dtype=path_x.dtype), jnp.cumsum(path_step)]
+    )
+    in_forward_window = path_distance <= jnp.asarray(
+        max_lookahead_distance, dtype=path_distance.dtype
+    )
+
+    dx = path_x[None, :] - traj_x[:, None]  # (K, P)
+    dy = path_y[None, :] - traj_y[:, None]  # (K, P)
     dist2 = dx * dx + dy * dy
+    dist2 = jnp.where(in_forward_window[None, :], dist2, jnp.inf)
 
     nearest_idx = jnp.argmin(dist2, axis=1)  # (K,)
     return jnp.max(nearest_idx).astype(jnp.int32)

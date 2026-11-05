@@ -1,4 +1,5 @@
 import jax
+import jax.numpy as jnp
 from jax import tree_util
 from dataclasses import dataclass
 
@@ -29,6 +30,7 @@ class CriticData:
 
     # Obstacle Points
     obs_points: jax.Array
+    obs_velocities: jax.Array
     obs_points_mask: jax.Array
 
     # Robot Footprint (Rectangles or Polygons)

@@ -112,16 +112,26 @@ def ackermann_kinematics(
     else:
         real_velocity = velocity
 
-    if mode == "steer" or mode == "angular":
-        co_matrix = np.array(
-            [[cos(phi), 0], [sin(phi), 0], [tan(psi) / wheelbase, 0], [0, 1]]
-        )
-
-    d_state = co_matrix @ real_velocity
-    new_state = state + d_state * step_time
-
+    speed = real_velocity[0, 0]
     if mode == "steer":
-        new_state[3, 0] = real_velocity[1, 0]
+        # Apply the commanded steering angle during this step. Using the old
+        # state[3] here adds an unmodeled one-step delay that MPPI does not predict.
+        psi = real_velocity[1, 0]
+        yaw_rate = speed * tan(psi) / wheelbase
+        new_steer = psi
+    elif mode == "angular":
+        yaw_rate = real_velocity[1, 0]
+        new_steer = (
+            np.arctan(yaw_rate * wheelbase / speed) if abs(speed) > 1e-8 else psi
+        )
+    else:
+        raise ValueError(f"Unsupported Ackermann mode: {mode}")
+
+    new_state = state.copy()
+    new_state[0, 0] += speed * cos(phi) * step_time
+    new_state[1, 0] += speed * sin(phi) * step_time
+    new_state[2, 0] += yaw_rate * step_time
+    new_state[3, 0] = new_steer
 
     new_state[2, 0] = WrapToPi(new_state[2, 0])
 
