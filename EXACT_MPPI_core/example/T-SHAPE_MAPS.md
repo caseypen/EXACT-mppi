@@ -17,10 +17,10 @@ From the repository root, choose a map and pass any run options in one command:
 | Map | Example | PNG preview |
 |---|---|---|
 | 1 | [map1_tshape](./map1_tshape/) | [F-shape preview](./map1_tshape/map1_fshape_figure.png) |
-| 2 | [map2_tshape](./map2_tshape/) | [preview](./map2_tshape/map2_tshape_figure.png) |
-| 3 | [map3_tshape](./map3_tshape/) | [preview](./map3_tshape/map3_tshape_preview.png) |
+| 2 | [map2_tshape](./map2_tshape/) | [Star preview](./map2_tshape/map2_star_figure.png) |
+| 3 | [map3_tshape](./map3_tshape/) | [L preview](./map3_tshape/map3_l_figure.png) |
 | 4 | [map4_tshape](./map4_tshape/) | [preview](./map4_tshape/map4_tshape_figure.png) |
 | 5 | [map5_tshape](./map5_tshape/) | [preview](./map5_tshape/map5_tshape_preview.png) |
-| 6 | [map6_tshape](./map6_tshape/) | [preview](./map6_tshape/map6_tshape_preview.png) |
+| 6 | [map6_tshape](./map6_tshape/) | [alpha preview](./map6_tshape/map6_alpha_figure.png) |
 
 Map routes are approximate reconstructions from the supplied figures. Intermediate guide poses are path samples; only the final goal activates the goal critics.

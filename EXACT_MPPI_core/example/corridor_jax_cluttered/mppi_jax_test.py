@@ -549,7 +549,12 @@ def main(
     planner_cfg = load_planner_config()
 
     mppi = build_stack(planner_cfg)
-    mppi.setRectangleFootprint(planner_cfg["MPPI"].get("vertices"))
+    footprint_cfg = planner_cfg["MPPI"]
+    vertices = footprint_cfg.get("vertices")
+    if footprint_cfg.get("footprint_type", "rectangle") == "polygon":
+        mppi.setPolygonFootprint(vertices)
+    else:
+        mppi.setRectangleFootprint(vertices)
 
     # Load visualization settings from config, with command-line args as override
     vis_cfg = planner_cfg.get("visualization", {})

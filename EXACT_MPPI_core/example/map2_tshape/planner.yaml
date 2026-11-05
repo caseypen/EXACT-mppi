@@ -68,7 +68,7 @@ MPPI:
       enabled: true
       cost_power: 1
       cost_weight: 12.0
-      offset_from_furthest: 20
+      offset_from_furthest: 15
       use_furthest_reached: false
       threshold_to_consider: 1.0
     PathAngleCritic:
@@ -97,23 +97,9 @@ MPPI:
       cost_power: 1
       cost_weight: 5.0
       pose_tolerance: 0.1
+  footprint_type: polygon
   vertices:
-  - - - 0.9
-      - 0.3
-    - - -0.9
-      - 0.3
-    - - -0.9
-      - -0.3
-    - - 0.9
-      - -0.3
-  - - - -0.6
-      - 1.2
-    - - -0.9
-      - 1.2
-    - - -0.9
-      - -1.2
-    - - -0.6
-      - -1.2
+  - [[0.9, 0.0], [0.267, 0.333], [0.212, 1.2], [-0.233, 0.54], [-0.9, 0.743], [-0.542, 0.0], [-0.9, -0.743], [-0.233, -0.54], [0.212, -1.2], [0.267, -0.333]]
   mosaic_unit_vertices:
   - - -1.0
     - 1.0
@@ -147,8 +133,8 @@ ipath:
   - - 41.1
     - 28.3
     - -0.84
-  - - 39.6
-    - 22.6
+  - - 35.6
+    - 21.6
     - 2.77
   - - 23.5
     - 41.3
