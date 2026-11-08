@@ -52,7 +52,7 @@ class EnvConfig:
         self.world_name = world_name
 
         if self.world_file_path is not None:
-            with open(self.world_file_path) as file:
+            with open(self.world_file_path, encoding="utf-8") as file:
                 com_list = yaml.load(file, Loader=yaml.FullLoader)
 
                 for key in com_list:
