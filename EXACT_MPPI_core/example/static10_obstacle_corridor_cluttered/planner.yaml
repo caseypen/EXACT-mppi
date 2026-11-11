@@ -5,18 +5,19 @@ MPPI:
   batch_size: 1000
   iteration_count: 1
   temperature: 0.3
-  vx_max: 2.0
-  vx_min: -1.0
-  wz_max: 2.0
+  gamma: 0.015
+  vx_max: 3.0
+  vx_min: -3.0
+  wz_max: 3.0
   ax_max: 2.0
   ax_min: -2.0
   az_max: 2.0
   vx_std: 0.5
-  wz_std: 0.7
+  wz_std: 2.0
   debug: true
   TrajectoryValidator:
     collision_lookahead_time: 2.0
-    collision_margin_distance: 0.05
+    collision_margin_distance: 0.01
   Critics:
     ConstraintCritic:
       enabled: true
@@ -38,7 +39,7 @@ MPPI:
       repulsion_weight: 5.0
       critical_weight: 30.0
       collision_cost: 100000.0
-      collision_margin_distance: 0.25
+      collision_margin_distance: 0.1
       near_goal_distance: 0.5
       repulsion_distance: 5.0
     PathAlignCritic:
